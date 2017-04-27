@@ -1,0 +1,3 @@
+[submodule "src/parse-vcf"]
+	path = src/parse-vcf
+	url = https://github.com/himamis/parse-vcf
