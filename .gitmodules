@@ -1,1 +1,6 @@
-
+[submodule "htslib"]
+	path = src/htslib
+	url = https://github.com/samtools/htslib
+[submodule "src/htslib"]
+	path = src/htslib
+	url = https://github.com/samtools/htslib
