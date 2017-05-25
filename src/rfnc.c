@@ -1,5 +1,10 @@
 #include <Rinternals.h>
 #include <stdio.h>
+#include "htslib/vcf.h"
+
+int hello() {
+return 1;
+}
 
 /*
 - samplesPerFeature from the fabia package:
@@ -7,7 +12,7 @@
  The output is a list with elements: sL (List with one element per feature: each element is a vector of samples where the feature is not zero.)
  nsL Vector of feature length containing number of samples having a non-zero feature value.
 */
-SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
+/*SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
   // open the sparse matrix file
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
 
@@ -61,7 +66,7 @@ So in our case a simple subsetting. The output originally is a dense matrix.
 But it is up to you whether you prefer a sparse matrix, 
 but then you probably would have to re-write a lot of functions that use the output of this function. */
 
-SEXP readSamplesSpfabic(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
+/*SEXP readSamplesSpfabic(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
 
 
   FILE *pFile;
@@ -544,5 +549,4 @@ SEXP readSamplesSpfabic(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upper
   UNPROTECT(4);
   return (RET);
 
-*/
-}
+}*/

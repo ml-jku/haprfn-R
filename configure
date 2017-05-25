@@ -1,0 +1,3 @@
+cd src/htslib
+autoconf
+autoheader
