@@ -234,13 +234,6 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
   }
 }
 
-
-
-
-
-
-
-
 hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
   annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", labelsA = NULL, 
   pRange = "", individuals = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, 
@@ -249,28 +242,33 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, 
   thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, 
   SNVclusterLength = 100) {
-  # fileName: the file name of the sparse matrix in sparse format.  prefixPath:
-  # path of the data file sparseMatrixPostfix: postfix string for the sparse matrix
-  # annotPostfix: postfix string for the annotation file labelsA: individual names
-  # as matrix individuals x 4 prange: for intervals indicates its range
-  # individuals: vector of individuals which should be included into the analysis;
-  # default = 0 (all individuals) lowerBP: lower bound for filtering the inputs
-  # columns, minimal MAF (however more than one occurence to remove private SNVs)
-  # upperBP: Upper bound for filtering the inputs columns, minimal MAF p: no
-  # biclusters per iteration alpha: sparseness loadings; default = 0.03 iter:
-  # number iterations quant: percentage of Ls to remove in each iteration eps:
-  # lower bound for variational parameter lapla; default: 1e-5 cyc: number of
-  # iterations; default = 50 non_negative: Non-negative factors and loadings if
-  # non_negative; default = 1 (yes).  write_file: results are written to files (L
-  # in sparse format), default = 0 (not written).  norm: data normalization;
-  # default = 1 (no normalization).  lap: minimal value of the variational
-  # parameter; default = 100.0.  IBDsegmentLength: IBD segment length in kbp Lt:
-  # percentage of largest Ls to consider for IBD segment extraction Zt: percentage
-  # of largest Zs to consider for IBD segment extraction thresCount: p-value of
-  # random histogram hit, default 1e-5 mintagSNVsFactor: percentage of segments
-  # overlap in IBD segments; 1/2 for large to 3/4 for small intervals pMAF:
-  # averaged and corrected minor allele frequency haplotypes: haplotypes = phased
-  # genotypes -> two chromosomes per individual
+  # fileName:            the file name of the sparse matrix in sparse format.
+  # prefixPath:          path of the data file
+  # sparseMatrixPostfix: postfix string for the sparse matrix
+  # annotPostfix:        postfix string for the annotation file
+  # labelsA:             individual names as matrix individuals x 4
+  # prange:              for intervals indicates its range
+  # individuals:             vector of individuals which should be included into the analysis; default = 0 (all individuals)
+  # lowerBP:             lower bound for filtering the inputs columns, minimal MAF (however more than one occurence to remove private SNVs)
+  # upperBP:             Upper bound for filtering the inputs columns, minimal MAF
+  # p:                   no biclusters per iteration
+  # alpha:               sparseness loadings; default = 0.03
+  # iter:                number iterations
+  # quant:               percentage of Ls to remove in each iteration
+  # eps:                 lower bound for variational parameter lapla; default: 1e-5
+  # cyc:                 number of iterations; default = 50
+  # non_negative:        Non-negative factors and loadings if non_negative; default = 1 (yes).
+  # write_file:          results are written to files (L in sparse format), default = 0 (not written).
+  # norm:                data normalization; default = 1 (no normalization).
+  # lap:                 minimal value of the variational parameter; default = 100.0.
+  # IBDsegmentLength:           IBD segment length in kbp
+  # Lt:                  percentage of largest Ls to consider for IBD segment extraction
+  # Zt:                  percentage of largest Zs to consider for IBD segment extraction
+  # thresCount:          p-value of random histogram hit, default 1e-5
+  # mintagSNVsFactor:       percentage of segments overlap in IBD segments; 1/2 for large to 3/4 for small intervals
+  # pMAF:                averaged and corrected minor allele frequency
+  # haplotypes:          haplotypes = phased genotypes -> two chromosomes per individual
+  
   
   message("                      ")
   message("                      ")
