@@ -1,552 +1,286 @@
+#include <R_ext/Rdynload.h>
 #include <Rinternals.h>
-#include <stdio.h>
-#include "htslib/vcf.h"
 
-int hello() {
-return 1;
+#define GET_MACRO(_1,_2,_3,_4,NAME,...) NAME
+
+#define _ERROR(file, str) fclose(file); Rprintf(str); return R_NilValue;
+
+#define READ(...) GET_MACRO(__VA_ARGS__, READ4, READ3)(__VA_ARGS__)
+#define READ4(from, template, variable, str) \
+    if (fscanf(from, template, variable) < 1) { _ERROR(from, str) }
+#define READ3(from, template, variable) \
+    READ4(from, template, variable, "Wrong file formant. \n")
+
+#define CHECK(expression, file) if (!(expression)) { _ERROR(file, "Error: " #expression " is not true!") }
+
+
+void _calculateColumnDelta(const double* col_sums, const int ncol, const double lowerB, 
+    const double upperB, int* col_delta, int* delta) {
+  *delta = 0;
+  for (int i = 0; i < ncol; i++) {
+    if (col_sums[i] > lowerB && col_sums[i] < upperB) {
+      col_delta[i] = *delta;
+    } else {
+      (*delta)++;
+      col_delta[i] = -1;
+    }
+  }
 }
 
-/*
-- samplesPerFeature from the fabia package:
- basically builds up the sparse matrix the other way round.
- The output is a list with elements: sL (List with one element per feature: each element is a vector of samples where the feature is not zero.)
- nsL Vector of feature length containing number of samples having a non-zero feature value.
-*/
-/*SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
-  // open the sparse matrix file
-  const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
+void _setMemory(double* array, const double value, const int n) {
+  for (int i = 0; i < n; i++) {
+    array[i] = 0.0;
+  }
+}
 
+void _sparseToDenseMatrix(double* dense, const int* row_ptr, const int* col_ind,
+    const int* col_delta, const double* val, const int nnz, const int nrow) {
+  int cur_row = 0;
+  for (int i = 0; i < nnz; i++) {
+    while (i >= row_ptr[cur_row + 1]) {
+      cur_row++;
+    }
+    if (col_delta[col_ind[i]] > -1) {
+      dense[(col_ind[i] - col_delta[col_ind[i]]) * nrow + cur_row] = val[i];  
+    }
+  }
+}
+
+SEXP _filterColumnsAndCreateMatrix(const int* row_ptr, const int* col_ind, const double* val, 
+    const int nnz, const int nrow, const int ncol,
+    const double* col_sums, double lowerB, double upperB) {
+  // filter by bounds
+  int* col_delta = (int*) R_alloc(ncol, sizeof(int));
+  int delta;
+  _calculateColumnDelta(col_sums, ncol, lowerB, upperB, col_delta, &delta);
+  int new_ncol = ncol - delta;
+
+  SEXP XS = PROTECT(allocMatrix(REALSXP, nrow, new_ncol));
+  double* X = REAL(XS);
+  _setMemory(X, 0.0, nrow * new_ncol);
+
+  _sparseToDenseMatrix(X, row_ptr, col_ind, col_delta, val, nnz, nrow);
+
+  UNPROTECT(1);
+  return XS;
+}
+
+/**
+ * 
+ * readSamplesSpRfnAll
+ *
+ *
+ */
+SEXP _readSamplesSpRfnAll(FILE* file, int* row_ptr, int* col_ind, double* val, 
+    int nrow, int nnz, double lowerB, double upperB) {
+  // read row pointers
+  for (int i = 0; i < nrow + 1; i++) {
+    READ(file, "%d", (row_ptr + i));
+  }
+
+  // read column indices
+  int max_col = -1;
+  for (int i = 0; i < nnz; i++) {
+    READ(file, "%d", (col_ind + i));
+    if (col_ind[i] >= max_col) {
+      max_col = col_ind[i];
+    }
+  }
+  int ncol = max_col + 1;
+
+  double* col_sums = (double*) R_alloc(ncol, sizeof(double));
+  _setMemory(col_sums, 0.0, ncol);
+
+  // read values and calculate column sums
+  for (int i = 0; i < nnz; i++) {
+    READ(file, "%lf", (val + i));
+    col_sums[col_ind[i]] += val[i];
+  }
+  fclose(file);
+
+  return _filterColumnsAndCreateMatrix(row_ptr, col_ind, val, nnz, nrow, ncol, col_sums, lowerB, 
+      upperB);
+}
+
+/**
+ *
+ *
+ *
+ */
+SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* col_ind, 
+    double* val, const int nrow, const int nnz, const int nsamp, const double lowerB, 
+    const double upperB) {
+  int cur_samp = 0;
+  
+  int* new_row_ptr = (int*) R_alloc(nsamp + 1, sizeof(int));
+  new_row_ptr[0] = 0;
+  
+  // read row pointers and build the filtered row pointers
+  for (int i = 0; i < nrow + 1; i++) {
+    READ(file, "%d", (row_ptr + i));
+    if (cur_samp < nsamp && samples[cur_samp] == i) {
+      new_row_ptr[cur_samp + 1] = new_row_ptr[cur_samp] + row_ptr[i] - row_ptr[i - 1];
+      cur_samp++;
+    }
+  }
+
+  int cur_row = 0;
+  int max_col = -1;
+  cur_samp = 0;
+  
+  int int_trash;
+  double double_trash;
+
+  int it = 0;
+  int cur_val = 0;
+  
+  // read column indices
+  while (cur_samp < nsamp) {
+    
+    // skip empty rows
+    while (it == row_ptr[cur_row + 1]) {
+      cur_row++;
+    }
+
+    // skip samples with empty rows
+    while ((samples[cur_samp] - 1) < cur_row) {
+      cur_samp++;
+    }
+    if (cur_samp >= nsamp) {
+      break;
+    }
+
+    // here: samples[cur_samp] - 1 is at least cur_row
+    // while cur_row is lesser than
+    while ((samples[cur_samp] - 1) > cur_row) {
+      while (it < row_ptr[cur_row + 1]) {
+        READ(file, "%d", &int_trash);
+        it++;
+      }
+      cur_row++;
+    }
+
+    // here samples[cur_samp] - 1 == cur_row
+    while (it < row_ptr[cur_row + 1]) {
+      READ(file, "%d", (col_ind + cur_val));
+      if (max_col < col_ind[cur_val]) {
+        max_col = col_ind[cur_val];
+      }
+      it++;
+      cur_val++;
+    }
+
+    // go onto the next sample
+    cur_samp++;
+  }
+
+  // read rest
+  for (; it < nnz; it++) {
+    READ(file, "%d", &int_trash);
+  }
+
+  int new_nnz = cur_val;
+  int ncol = max_col + 1;
+
+  double* col_sums = (double*) R_alloc(ncol, sizeof(double));
+  _setMemory(col_sums, 0.0, ncol);
+
+  cur_row = 0;
+  cur_samp = 0;
+  it = 0;
+  cur_val = 0;
+  // read values and calculate column sums
+  while (cur_samp < nsamp) {
+    // skip empty rows
+    while (it == row_ptr[cur_row + 1]) {
+      cur_row++;
+    }
+
+    // skip samples with empty rows
+    while ((samples[cur_samp] - 1) < cur_row) {
+      cur_samp++;
+    }
+    if (cur_samp >= nsamp) {
+      break;
+    }
+
+
+    // here: samples[cur_samp] - 1 is at least cur_row
+    // while cur_row is lesser than
+    while ((samples[cur_samp] - 1) > cur_row) {
+      while (it < row_ptr[cur_row + 1]) {
+        READ(file, "%lf", &double_trash);
+        it++;
+      }
+      cur_row++;
+    }
+
+    // here samples[cur_samp] - 1 == cur_row
+    while (it < row_ptr[cur_row + 1]) {
+      READ(file, "%lf", (val + cur_val));
+
+      col_sums[col_ind[cur_val]] += val[cur_val];
+      it++;
+      cur_val++;
+    }
+
+    // go onto the next sample
+    cur_samp++;
+  }
+
+  fclose(file);
+
+  return _filterColumnsAndCreateMatrix(new_row_ptr, col_ind, val, new_nnz, nsamp, ncol, col_sums, lowerB, 
+      upperB);
+}
+
+
+SEXP readSamplesSpRfn(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
+  const char* file_name = CHAR(STRING_ELT(file_nameS, 0));
+  
+  const double lowerB = (double) (REAL(lowerBS)[0]);
+  const double upperB = (double) (REAL(upperBS)[0]);
+  const int* samples = INTEGER(samplesS);
+  const int nsamp = LENGTH(samplesS);
 
   FILE* file = fopen(file_name, "r");
+
   if (file == NULL) {
-    Rprintf("File %s not found! Stop.\n", file_name);
+    Rprintf("File %s not found!\n", file_name);
     return R_NilValue;
   }
 
-  unsigned int nnz, m;
+  int nrow, nnz;
 
-  int ret = fscanf(file, "%u\n", &nnz);
-  if (ret < 1) {
-    Rprintf("Wrong file format. Was expecting an unsigned integer (NNZ).\n");
-    return R_NilValue;
+  READ(file, "%d\n", &nrow);
+  CHECK(nrow > 0, file);
+
+  READ(file, "%d\n", &nnz);
+  CHECK(nnz > 0, file);
+
+  int* row_ptr = (int*) R_alloc(nrow + 1, sizeof(int));
+  int* col_ind = (int*) R_alloc(nnz, sizeof(int));
+  double* val = (double*) R_alloc(nnz, sizeof(double));
+
+  if (samples[0] <= 0) {
+    return _readSamplesSpRfnAll(file, row_ptr, col_ind, val, nrow, nnz, lowerB, upperB);
+  } else {
+    return _readSamplesSpRfnFilter(file, samples, row_ptr, col_ind, val, nrow, nnz, nsamp, 
+      lowerB, upperB);
   }
-
-  ret = fscanf(file, "%u\n", &m);
-  if (ret < 1) {
-    Rprintf("Wrong file format. Was expecting an unsigned integer (M).\n");
-    return R_NilValue;
-  }
-
-  SEXP entries = PROTECT(allocVector(REALSXP, nnz));
-  SEXP columns = PROTECT(allocVector(REALSXP, nnz));
-  SEXP row_indices = PROTECT(allocVector(REALSXP, m + 1));
-  SEXP out = PROTECT(allocVector(VECSXP, 3));
-
-  doubl
-  while ((ret = f) {
-
 }
 
-SEXP names = PROTECT(allocVector(STRSXP, 3));
-             SET_STRING_ELT(names, 0, mkChar("entries"));
-             SET_STRING_ELT(names, 1, mkChar("columns"));
-             SET_STRING_ELT(names, 2, mkChar("row_indices"));
 
-             SET_VECTOR_ELT(out, 0, entries);
-             SET_VECTOR_ELT(out, 1, columns);
-             SET_VECTOR_ELT(out, 2, row_indices);
-             setAttrib(out, R_NamesSymbol, names);
 
-             UNPROTECT(5);
-             return out;
+R_CallMethodDef callMethods[] = {
+  {"readSamplesSpRfn", (DL_FUNC) &readSamplesSpRfn, 4},
+  {NULL, NULL, 0}
+};
+
+void R_init_myLib(DllInfo *info) {
+  R_registerRoutines(info, NULL, callMethods, NULL, NULL);
 }
 
-/* - readSamplesSpfabia from the fabia package: extract the information for specific samples from the sparse matrix. 
-So in our case a simple subsetting. The output originally is a dense matrix. 
-But it is up to you whether you prefer a sparse matrix, 
-but then you probably would have to re-write a lot of functions that use the output of this function. */
-
-/*SEXP readSamplesSpfabic(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
-
-
-  FILE *pFile;
-
-
-  char sst[200];
-
-
-  int hpp = 0, ig = 0, jg = 0, samp = 0, ret = 0;
-
-  int  i = 0, j = 0, i1 = 0, i2 = 0, n = 0, nn = 0;
-
-  double fs = 0.0;
-
-
-
-
-
-  const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
-
-
-  int *xa;
-  int **xind;
-  double **xval;
-
-  double lowerB = (double)(REAL(lowerBS)[0]);
-  double upperB = (double)(REAL(upperBS)[0]);
-
-  int nsamp = length(samplesS);
-
-  int *samples =  INTEGER(samplesS);
-  if (samples[0] > 0) {
-    samp = 0;
-
-  } else {
-    samp = -1;
-  }
-
-  sst[0] = 0;
-  strcat(sst, file_name);
-  strcat(sst, ".txt");
-
-  pFile = fopen (sst, "r");
-
-  if (pFile == NULL) {
-    Rprintf("File >%s< not found! Stop.\n", sst);
-    return R_NilValue;
-  }
-
-  ret = fscanf(pFile, "%d\n", &nn);
-  if (ret < 1) {
-    Rprintf("Wrong file format.\n");
-    return R_NilValue;
-  }
-
-  if (!(nn > 0)) {
-    fclose (pFile);
-    Rprintf("Wrong file format (sparse file format required)! Stop.\n");
-    return R_NilValue;
-  }
-
-  ret = fscanf(pFile, "%d\n", &n);
-  if (ret < 1) {
-    Rprintf("Wrong file format.\n");
-    return R_NilValue;
-  }
-
-  if (!(n > 0)) {
-    fclose (pFile);
-    Rprintf("Wrong file format (sparse file format required)! Stop.\n");
-    return R_NilValue;
-  }
-
-  if (samp < 0) {
-
-    xa = (int *) R_Calloc(nn, int);
-    xind = (int **) R_Calloc(nn, int *);
-    xind[0] = R_Calloc((long) nn * n, int);
-    for (i = 0; i < nn ; i++)
-    {
-      xind[i] =  xind[0] + i * n;
-    }
-    xval = (double **) R_Calloc(nn, double *);
-    xval[0] = R_Calloc((long) nn * n, double);
-    for (i = 0; i < nn; i++)
-    {
-      xval[i] = xval[0] + i * n;
-    }
-
-
-    for (i = 0; i < nn; i ++)
-    {
-      ret = fscanf(pFile, "%d\n", &ig);
-      xa[i] = ig;
-      for (j = 0; j <  ig; j ++) {
-        ret = fscanf(pFile, "%d", &hpp);
-        xind[i][j] = hpp;
-      }
-      ret = fscanf(pFile, "\n");
-      for (j = 0; j < ig; j ++) {
-        ret = fscanf(pFile, "%lf", &fs);
-        xval[i][j] = fs;
-      }
-      ret = fscanf(pFile, "\n");
-    }
-
-  } else {
-    xa = (int *) R_Calloc(nsamp, int);
-    xind = (int **) R_Calloc(nsamp, int *);
-    xind[0] = R_Calloc((long) nsamp * n, int);
-    for (i = 0; i < nsamp ; i++)
-    {
-      xind[i] =  xind[0] + i * n;
-    }
-    xval = (double **) R_Calloc(nsamp, double *);
-    xval[0] = R_Calloc((long) nsamp * n, double);
-    for (i = 0; i < nsamp; i++)
-    {
-      xval[i] = xval[0] + i * n;
-    }
-
-    for (i = 0; i < nn; i ++)
-    {
-      if ((samples[samp] - 1) > i)
-      {
-        ret = fscanf(pFile, "%d\n", &ig);
-        for (j = 0; j <  ig; j ++) {
-          ret = fscanf(pFile, "%d", &hpp);
-        }
-        ret = fscanf(pFile, "\n");
-        for (j = 0; j < ig; j ++) {
-          ret = fscanf(pFile, "%lf", &fs);
-        }
-        ret = fscanf(pFile, "\n");
-
-      } else {
-        ret = fscanf(pFile, "%d\n", &ig);
-        xa[samp] = ig;
-        for (j = 0; j <  ig; j ++) {
-          ret = fscanf(pFile, "%d", &hpp);
-          xind[samp][j] = hpp;
-        }
-        ret = fscanf(pFile, "\n");
-        for (j = 0; j < ig; j ++) {
-          ret = fscanf(pFile, "%lf", &fs);
-          xval[samp][j] = fs;
-        }
-        ret = fscanf(pFile, "\n");
-        samp++;
-        if (samp == nsamp) break;
-      }
-
-    }
-    if (samp != nsamp)
-    {
-      Rprintf("Only %d of %d samples found! Some sample numbers are too large. Continue.\n", samp, nsamp);
-    }
-    nn = samp;
-    Rprintf("Using %d samples!\n", samp);
-  }
-  fclose (pFile);
-
-  int *Psi = R_Calloc(n, int);
-  double *XX = R_Calloc(n, double);
-
-  for (i1 = 0; i1 < n; i1++)
-  {
-    XX[i1] = 0.0;
-  }
-
-  for (i2 = 0; i2 < nn; i2++) {
-    for (ig = 0; ig < xa[i2]; ig++) {
-      XX[xind[i2][ig]] += xval[i2][ig];
-    }
-  }
-
-
-  for (i2 = 0; i2 < n; i2++) {
-    if ((XX[i2] > lowerB) && (XX[i2] < upperB)) {
-      Psi[i2] = 0;
-    } else {
-      Psi[i2] = 1;
-    }
-  }
-
-
-  for (i2 = 0; i2 < nn; i2++) {
-    for (ig = 0, jg = 0; (ig + jg) < xa[i2];) {
-      if ( Psi[xind[i2][ig + jg]] == 0 )
-      {
-        if (jg > 0) {
-          xval[i2][ig] = xval[i2][ig + jg];
-          xind[i2][ig] = xind[i2][ig + jg];
-        }
-        ig++;
-      } else
-      {
-        jg++;
-      }
-    }
-    xa[i2] -= jg;
-  }
-
-
-
-
-
-
-  SEXP X_n;
-  PROTECT(X_n = allocMatrix(REALSXP, n, nn));
-
-  for (i1 = 0; i1 < nn; i1++)
-  {
-    for (i2 = 0; i2 < n; i2++)
-      REAL(X_n)[i2 + n * i1] = 0.0;
-  }
-  for (i2 = 0; i2 < nn; i2++) {
-    for (ig = 0; ig < xa[i2]; ig++) {
-      REAL(X_n)[xind[i2][ig] + n * i2] = xval[i2][ig];
-    }
-  }
-
-  R_Free (xa );
-  R_Free (xind[0]);
-  R_Free (xind );
-  R_Free (xval[0]);
-  R_Free (xval );
-
-  R_Free (XX);
-  R_Free (Psi);
-
-
-  SEXP namesRET;
-  PROTECT(namesRET = allocVector(STRSXP, 1));
-  SET_STRING_ELT(namesRET, 0, mkChar("X"));
-
-  SEXP RET;
-  PROTECT(RET = allocVector(VECSXP, 1));
-  SET_VECTOR_ELT(RET, 0, X_n);
-  setAttrib(RET, R_NamesSymbol, namesRET);
-  UNPROTECT(3);
-  return (RET);
-
+int main() {
+  return 1;
 }
-
-/*
-
-
-
-
-  FILE *pFile;
-
-
-  char sst[200];
-
-
-  int hpp = 0, ig = 0, samp = 0;
-
-
-
-  int  i = 0, j = 0, i1 = 0, i2 = 0, n = 0, nn = 0, ret = 0;
-
-  double fs = 0.0;
-
-  const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
-
-
-  int *xa;
-  int **xind;
-  double **xval;
-
-  double lowerB = (double)(REAL(lowerBS)[0]);
-  double upperB = (double)(REAL(upperBS)[0]);
-
-  int nsamp = length(samplesS);
-
-  int *samples =  INTEGER(samplesS);
-  if (samples[0] > 0) {
-    samp = 0;
-
-  } else {
-    samp = -1;
-  }
-
-  sst[0] = 0;
-  strcat(sst, file_name);
-  strcat(sst, ".txt");
-
-  pFile = fopen (sst, "r");
-
-  if (pFile == NULL) {
-    Rprintf("File >%s< not found! Stop.\n", sst);
-    return R_NilValue;
-  }
-
-  ret = fscanf(pFile, "%d\n", &nn);
-  if (ret < 1) {
-    Rprintf("Wrong file format.\n");
-    return R_NilValue;
-  }
-
-  if (!(nn > 0)) {
-    fclose (pFile);
-    Rprintf("Wrong file format (sparse file format required)! Stop.\n");
-    return R_NilValue;
-  }
-
-  ret = fscanf(pFile, "%d\n", &n);
-  if (ret < 1) {
-    Rprintf("Wrong file format.\n");
-    return R_NilValue;
-  }
-
-  if (!(n > 0)) {
-    fclose (pFile);
-    Rprintf("Wrong file format (sparse file format required)! Stop.\n");
-    return R_NilValue;
-  }
-
-  SEXP xLL, PhiA;
-
-  PROTECT(xLL = allocVector(VECSXP, n));
-  PROTECT(PhiA = allocVector(INTSXP, n));
-  int *Phi = INTEGER(PhiA);
-  int *Psi = R_Calloc(n, int);
-  double *XX = R_Calloc(n, double);
-
-
-  if (samp < 0) {
-
-    xa = (int *) R_Calloc(nn, int);
-    xind = (int **) R_Calloc(nn, int *);
-    xind[0] = R_Calloc((long) nn * n, int);
-    for (i = 0; i < nn ; i++)
-    {
-      xind[i] =  xind[0] + i * n;
-    }
-    xval = (double **) R_Calloc(nn, double *);
-    xval[0] = R_Calloc((long) nn * n, double);
-    for (i = 0; i < nn; i++)
-    {
-      xval[i] = xval[0] + i * n;
-    }
-
-
-    for (i = 0; i < nn; i ++)
-    {
-      ret = fscanf(pFile, "%d\n", &ig);
-      xa[i] = ig;
-      for (j = 0; j <  ig; j ++) {
-        ret = fscanf(pFile, "%d", &hpp);
-        xind[i][j] = hpp;
-      }
-      ret = fscanf(pFile, "\n");
-      for (j = 0; j < ig; j ++) {
-        ret = fscanf(pFile, "%lf", &fs);
-        xval[i][j] = fs;
-      }
-      ret = fscanf(pFile, "\n");
-    }
-
-  } else {
-    xa = (int *) R_Calloc(nsamp, int);
-    xind = (int **) R_Calloc(nsamp, int *);
-    xind[0] = R_Calloc((long) nsamp * n, int);
-    for (i = 0; i < nsamp ; i++)
-    {
-      xind[i] =  xind[0] + i * n;
-    }
-    xval = (double **) R_Calloc(nsamp, double *);
-    xval[0] = R_Calloc((long) nsamp * n, double);
-    for (i = 0; i < nsamp; i++)
-    {
-      xval[i] = xval[0] + i * n;
-    }
-
-    for (i = 0; i < nn; i ++)
-    {
-      if ((samples[samp] - 1) > i)
-      {
-        ret = fscanf(pFile, "%d\n", &ig);
-        for (j = 0; j <  ig; j ++) {
-          ret = fscanf(pFile, "%d", &hpp);
-        }
-        ret = fscanf(pFile, "\n");
-        for (j = 0; j < ig; j ++) {
-          ret = fscanf(pFile, "%lf", &fs);
-        }
-        ret = fscanf(pFile, "\n");
-
-      } else {
-        ret = fscanf(pFile, "%d\n", &ig);
-        xa[samp] = ig;
-        for (j = 0; j <  ig; j ++) {
-          ret = fscanf(pFile, "%d", &hpp);
-          xind[samp][j] = hpp;
-        }
-        ret = fscanf(pFile, "\n");
-        for (j = 0; j < ig; j ++) {
-          ret = fscanf(pFile, "%lf", &fs);
-          xval[samp][j] = fs;
-        }
-        ret = fscanf(pFile, "\n");
-        samp++;
-        if (samp == nsamp) break;
-      }
-
-    }
-    if (samp != nsamp)
-    {
-      Rprintf("Only %d of %d samples found! Some sample numbers are too large. Continue.\n", samp, nsamp);
-    }
-    nn = samp;
-    Rprintf("Using %d samples!\n", samp);
-  }
-  fclose (pFile);
-
-
-
-  for (i1 = 0; i1 < n; i1++)
-  {
-    XX[i1] = 0.0;
-    Psi[i1] = 0;
-    Phi[i1] = 0;
-  }
-
-
-  for (i2 = 0; i2 < nn; i2++) {
-    for (ig = 0; ig < xa[i2]; ig++) {
-      XX[xind[i2][ig]] += xval[i2][ig];
-      Psi[xind[i2][ig]]++;
-    }
-  }
-
-
-
-  for (i2 = 0; i2 < n; i2++) {
-    if ((XX[i2] > lowerB) && (XX[i2] < upperB) && (Psi[i2] > 0)) {
-      SET_VECTOR_ELT(xLL, i2, allocVector(INTSXP, Psi[i2]));
-    } else {
-      Psi[i2] = 0;
-      SET_VECTOR_ELT(xLL, i2, allocVector(INTSXP, 1));
-      INTEGER(VECTOR_ELT(xLL, i2))[0] = 0;
-
-    }
-  }
-
-
-
-  for (i2 = 0; i2 < nn; i2++) {
-    for (ig = 0; ig < xa[i2]; ig++) {
-      if (Psi[xind[i2][ig]] > 0) {
-        INTEGER(VECTOR_ELT(xLL, xind[i2][ig]))[Phi[xind[i2][ig]]] = i2 + 1;
-        Phi[xind[i2][ig]]++;
-      }
-    }
-  }
-
-
-  R_Free (xa );
-  R_Free (xind[0]);
-  R_Free (xind );
-  R_Free (xval[0]);
-  R_Free (xval );
-
-  R_Free (XX);
-  R_Free (Psi);
-
-
-  SEXP namesRET;
-  PROTECT(namesRET = allocVector(STRSXP, 2));
-  SET_STRING_ELT(namesRET, 0, mkChar("sL"));
-  SET_STRING_ELT(namesRET, 1, mkChar("nsL"));
-
-  SEXP RET;
-  PROTECT(RET = allocVector(VECSXP, 2));
-  SET_VECTOR_ELT(RET, 0, xLL);
-  SET_VECTOR_ELT(RET, 1, PhiA);
-  setAttrib(RET, R_NamesSymbol, namesRET);
-  UNPROTECT(4);
-  return (RET);
-
-}*/
