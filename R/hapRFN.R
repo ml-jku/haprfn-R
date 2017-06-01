@@ -52,7 +52,6 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
   
   save(individualsN, snvs, file = paste(fileName, "_All", ".Rda", sep = ""))
   
-  
   for (posAll in startRun:endRun) {
     start <- (posAll - 1) * shift
     end <- start + intervalSize
@@ -60,7 +59,6 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
     if (end > snvs) {
       end <- snvs
     }
-    
     
     pRange <- paste("_", format(start, scientific = FALSE), "_", format(end, 
       scientific = FALSE), sep = "")
@@ -397,11 +395,8 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   message("start RFN")
   
-  
   # Fabia call res <-
   # spfabia(X=paste(prefixPath,fileName,pRange,sparseMatrixPostfix,sep=''),p=p,alpha=alpha,cyc=cyc,non_negative=non_negative,write_file=write_file,norm=norm,lap=lap,samples=individuals,iter=iter,quant=quant,lowerB=lowerBindivid,upperB=upperBindivid,eps=eps)
-  
-  
   
   # RFN call
   l = ncol(X)
@@ -442,7 +437,6 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
     noL <- t(vz * t(myL))
   }
   
-  
   Lz = noL %*% nZ
   rownames(noL) <- rowna
   colnames(noL) <- colnames(noL, do.NULL = FALSE, prefix = "bicluster")
@@ -454,19 +448,16 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   avini <- as.vector(1)
   xavini <- as.vector(1)
   
-  
   res <- new("Factorization", parameters = list("rfn", cyc, p), n = n, p1 = p, 
     p2 = p, l = l, center = as.vector(1), scaleData = as.vector(1), X = as.matrix(1), 
     L = noL, Z = nZ, M = as.matrix(1), LZ = as.matrix(1), U = as.matrix(1), avini = avini, 
     xavini = xavini, ini = ini, Psi = myPsi, lapla = mylapla)
   
-  
-  
   # Load individuals to Ls of interest: load minor alleles of the Ls
   
-  sPF <- samplesPerFeature(X = paste(prefixPath, fileName, pRange, sparseMatrixPostfix, 
-    sep = ""), samples = individuals, lowerB = lowerBindivid, upperB = upperBindivid)
-  
+  sPF <- samplesPerFeature(X = paste(prefixPath, fileName, pRange, sparseMatrixPostfix, sep = ""), 
+                           samples = individuals, lowerB = lowerBindivid, upperB = upperBindivid)
+
   if (nchar(annotPostfix) > 0) {
     # annot[[1]] <- chromosome annot[[2]] <- phys. position annot[[3]] <- snvNames
     # annot[[4]] <- snvMajor annot[[5]] <- snvMinor annot[[6]] <- quality annot[[7]]
@@ -474,15 +465,13 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
     # annot[[10]] <- frequency annot[[11]] <- 1 = changed if major allele is actually
     # minor allele otherwise 0
     
-    
     annot <- read.table(paste(prefixPath, fileName, pRange, annotPostfix, sep = ""), 
       header = FALSE, sep = " ", quote = "", as.is = TRUE, skip = 2)
     
-    
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub(",", ";", annot[[i]])
-      
     }
+    
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub("TRUE", "T", annot[[i]])
       
@@ -491,7 +480,6 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
     annot[[2]] <- as.numeric(annot[[2]])  # physical position
     annot[[10]] <- as.numeric(annot[[10]])  # SNV frequency
     annot[[11]] <- as.numeric(annot[[11]])  # changed
-    
   }
   
   if (is.null(labelsA)) {
@@ -522,13 +510,11 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   # save fabia result
   # save(res,sPF,annot,file=paste(fileName,pRange,'_res.Rda',sep=''))
-  
-  
+
   # first haplotype extraction with offset 0
   
   off1 <- 0
-  
-  
+
   IBDsegmentList1 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
     labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA, thresA = thresA, mintagSNVs = mintagSNVs, 
     off = off1, procMinIndivids = procMinIndivids, thresPrune = thresPrune)
@@ -620,6 +606,4 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   return(list(mergedIBDsegmentList = mergedIBDsegmentList, res = res, sPF = sPF, 
     annot = annot, IBDsegmentList1 = IBDsegmentList1, IBDsegmentList2 = IBDsegmentList2, 
     mergedIBDsegmentList1 = mergedIBDsegmentList1, mergedIBDsegmentList2 = mergedIBDsegmentList2))
-  
-  # HapRFN
 }
