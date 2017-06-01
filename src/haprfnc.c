@@ -365,7 +365,7 @@ SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperB
 
 R_CallMethodDef callMethods[] = {
   {"readSamplesSpRfn", (DL_FUNC) &readSamplesSpRfn, 4},
-  {"samplesPerFeature", (DL_FUNC) &readSamplesSpRfn, 4},
+  {"samplesPerFeature", (DL_FUNC) &samplesPerFeature, 4},
   {NULL, NULL, 0}
 };
 
