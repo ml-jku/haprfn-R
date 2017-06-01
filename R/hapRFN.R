@@ -19,7 +19,7 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0.0, upperB = 1000.0) {
   return res
 }
 
-readSamplesSpfabia <- function(X, samples = 0, lowerB = 0.0, upperB = 1000.0) {
+readSamplesSpRfn <- function(X, samples = 0, lowerB = 0.0, upperB = 1000.0) {
   if (missing(X)) {
     stop("Data file name missing. Stopped.")
   }
@@ -34,7 +34,7 @@ readSamplesSpfabia <- function(X, samples = 0, lowerB = 0.0, upperB = 1000.0) {
   # TODO: Return nil value on error, or a standard empty?
   
   #if (is.null(res)) {
-  #  return list(sL = list(), nsL = 0)
+  #  return list(X = as.matrix(1))
   #}
 
   return res
