@@ -9,7 +9,7 @@
 #define READ4(from, template, variable, str) \
     if (fscanf(from, template, variable) < 1) { _ERROR(from, str) }
 #define READ3(from, template, variable) \
-    READ4(from, template, variable, "Wrong file formant. \n")
+    READ4(from, template, variable, "Wrong file format. \n")
 
 #define CHECK(expression, file) if (!(expression)) { _ERROR(file, "Error: " #expression " is not true!") }
 
@@ -133,7 +133,7 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
 
   int it = 0;
   int cur_val = 0;
-  
+
   // read column indices
   while (cur_samp < nsamp) {
     
@@ -146,7 +146,7 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
     while ((samples[cur_samp] - 1) < cur_row) {
       cur_samp++;
     }
-    if (cur_samp >= nsamp) {
+    if (cur_samp >= nsamp || samples[cur_samp] > nrow) {
       break;
     }
 
@@ -173,6 +173,7 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
     // go onto the next sample
     cur_samp++;
   }
+  int new_nrow = cur_samp;
 
   // read rest
   for (; it < nnz; it++) {
@@ -200,7 +201,8 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
     while ((samples[cur_samp] - 1) < cur_row) {
       cur_samp++;
     }
-    if (cur_samp >= nsamp) {
+
+    if (cur_samp >= nsamp || samples[cur_samp] > nrow) {
       break;
     }
 
@@ -230,11 +232,11 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
 
   fclose(file);
 
-  return _filterColumnsAndCreateMatrix(new_row_ptr, col_ind, val, new_nnz, nsamp, ncol, col_sums, lowerB, 
+  return _filterColumnsAndCreateMatrix(new_row_ptr, col_ind, val, new_nnz, new_nrow, ncol, col_sums, lowerB, 
       upperB);
 }
 
-
+// sampleS are sorted integers. LENGTH(sampleS) <= nrow
 SEXP readSamplesSpRfn(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
   const char* file_name = CHAR(STRING_ELT(file_nameS, 0));
   
