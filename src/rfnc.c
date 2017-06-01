@@ -3,7 +3,7 @@
 
 #define GET_MACRO(_1,_2,_3,_4,NAME,...) NAME
 
-#define _ERROR(file, str) fclose(file); Rprintf(str); return R_NilValue;
+#define _ERROR(file, str) fclose(file); Rprintf(str); return -1;
 
 #define READ(...) GET_MACRO(__VA_ARGS__, READ4, READ3)(__VA_ARGS__)
 #define READ4(from, template, variable, str) \
@@ -14,65 +14,25 @@
 #define CHECK(expression, file) if (!(expression)) { _ERROR(file, "Error: " #expression " is not true!") }
 
 
-void _calculateColumnDelta(const double* col_sums, const int ncol, const double lowerB, 
-    const double upperB, int* col_delta, int* delta) {
-  *delta = 0;
-  for (int i = 0; i < ncol; i++) {
-    if (col_sums[i] > lowerB && col_sums[i] < upperB) {
-      col_delta[i] = *delta;
-    } else {
-      (*delta)++;
-      col_delta[i] = -1;
-    }
-  }
-}
+/********************************************
+ * COMMON FUNCTIONS                         *
+ ********************************************/
 
-void _setMemory(double* array, const double value, const int n) {
+void _setMemoryDouble(double* array, const double value, const int n) {
   for (int i = 0; i < n; i++) {
-    array[i] = 0.0;
+    array[i] = value;
   }
 }
 
-void _sparseToDenseMatrix(double* dense, const int* row_ptr, const int* col_ind,
-    const int* col_delta, const double* val, const int nnz, const int nrow) {
-  int cur_row = 0;
-  for (int i = 0; i < nnz; i++) {
-    while (i >= row_ptr[cur_row + 1]) {
-      cur_row++;
-    }
-    if (col_delta[col_ind[i]] > -1) {
-      dense[(col_ind[i] - col_delta[col_ind[i]]) * nrow + cur_row] = val[i];  
-    }
+void _setMemoryInt(int* array, const int value, const int n) {
+  for (int i = 0; i < n; i++) {
+    array[i] = value;
   }
 }
 
-SEXP _filterColumnsAndCreateMatrix(const int* row_ptr, const int* col_ind, const double* val, 
-    const int nnz, const int nrow, const int ncol,
-    const double* col_sums, double lowerB, double upperB) {
-  // filter by bounds
-  int* col_delta = (int*) R_alloc(ncol, sizeof(int));
-  int delta;
-  _calculateColumnDelta(col_sums, ncol, lowerB, upperB, col_delta, &delta);
-  int new_ncol = ncol - delta;
-
-  SEXP XS = PROTECT(allocMatrix(REALSXP, nrow, new_ncol));
-  double* X = REAL(XS);
-  _setMemory(X, 0.0, nrow * new_ncol);
-
-  _sparseToDenseMatrix(X, row_ptr, col_ind, col_delta, val, nnz, nrow);
-
-  UNPROTECT(1);
-  return XS;
-}
-
-/**
- * 
- * readSamplesSpRfnAll
- *
- *
- */
-SEXP _readSamplesSpRfnAll(FILE* file, int* row_ptr, int* col_ind, double* val, 
-    int nrow, int nnz, double lowerB, double upperB) {
+int _readAllSamplesAndCalculateColSums(FILE* file, int* row_ptr, int* col_ind, double* val, 
+    const int nrow, const int nnz, const double lowerB, const double upperB, 
+    double** col_sums, int* ncol) {
   // read row pointers
   for (int i = 0; i < nrow + 1; i++) {
     READ(file, "%d", (row_ptr + i));
@@ -86,40 +46,35 @@ SEXP _readSamplesSpRfnAll(FILE* file, int* row_ptr, int* col_ind, double* val,
       max_col = col_ind[i];
     }
   }
-  int ncol = max_col + 1;
+  *ncol = max_col + 1;
 
-  double* col_sums = (double*) R_alloc(ncol, sizeof(double));
-  _setMemory(col_sums, 0.0, ncol);
+  *col_sums = (double*) R_alloc(*ncol, sizeof(double));
+  _setMemoryDouble(*col_sums, 0.0, *ncol);
 
   // read values and calculate column sums
   for (int i = 0; i < nnz; i++) {
     READ(file, "%lf", (val + i));
-    col_sums[col_ind[i]] += val[i];
+    (*col_sums)[col_ind[i]] += val[i];
   }
+
   fclose(file);
 
-  return _filterColumnsAndCreateMatrix(row_ptr, col_ind, val, nnz, nrow, ncol, col_sums, lowerB, 
-      upperB);
+  return 0;
 }
 
-/**
- *
- *
- *
- */
-SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* col_ind, 
-    double* val, const int nrow, const int nnz, const int nsamp, const double lowerB, 
-    const double upperB) {
+int _readFilteredSamplesAndCalculateColSums(FILE* file, int** row_ptr, int* col_ind, double* val, 
+    int* nrow, int* nnz, const double lowerB, const double upperB, const int* samples, 
+    const int nsamp, double** col_sums, int* ncol) {
   int cur_samp = 0;
   
   int* new_row_ptr = (int*) R_alloc(nsamp + 1, sizeof(int));
   new_row_ptr[0] = 0;
   
   // read row pointers and build the filtered row pointers
-  for (int i = 0; i < nrow + 1; i++) {
-    READ(file, "%d", (row_ptr + i));
+  for (int i = 0; i < *nrow + 1; i++) {
+    READ(file, "%d", (*row_ptr + i));
     if (cur_samp < nsamp && samples[cur_samp] == i) {
-      new_row_ptr[cur_samp + 1] = new_row_ptr[cur_samp] + row_ptr[i] - row_ptr[i - 1];
+      new_row_ptr[cur_samp + 1] = new_row_ptr[cur_samp] + (*row_ptr)[i] - (*row_ptr)[i - 1];
       cur_samp++;
     }
   }
@@ -138,7 +93,7 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
   while (cur_samp < nsamp) {
     
     // skip empty rows
-    while (it == row_ptr[cur_row + 1]) {
+    while (it == (*row_ptr)[cur_row + 1]) {
       cur_row++;
     }
 
@@ -146,14 +101,15 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
     while ((samples[cur_samp] - 1) < cur_row) {
       cur_samp++;
     }
-    if (cur_samp >= nsamp || samples[cur_samp] > nrow) {
+
+    if (cur_samp >= nsamp || samples[cur_samp] > *nrow) {
       break;
     }
 
     // here: samples[cur_samp] - 1 is at least cur_row
     // while cur_row is lesser than
     while ((samples[cur_samp] - 1) > cur_row) {
-      while (it < row_ptr[cur_row + 1]) {
+      while (it < (*row_ptr)[cur_row + 1]) {
         READ(file, "%d", &int_trash);
         it++;
       }
@@ -161,7 +117,7 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
     }
 
     // here samples[cur_samp] - 1 == cur_row
-    while (it < row_ptr[cur_row + 1]) {
+    while (it < (*row_ptr)[cur_row + 1]) {
       READ(file, "%d", (col_ind + cur_val));
       if (max_col < col_ind[cur_val]) {
         max_col = col_ind[cur_val];
@@ -173,18 +129,18 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
     // go onto the next sample
     cur_samp++;
   }
-  int new_nrow = cur_samp;
-
   // read rest
-  for (; it < nnz; it++) {
+  for (; it < *nnz; it++) {
     READ(file, "%d", &int_trash);
+    if (max_col < int_trash) {
+        max_col = int_trash;
+    }
   }
 
-  int new_nnz = cur_val;
-  int ncol = max_col + 1;
+  *ncol = max_col + 1;
 
-  double* col_sums = (double*) R_alloc(ncol, sizeof(double));
-  _setMemory(col_sums, 0.0, ncol);
+  *col_sums = (double*) R_alloc(*ncol, sizeof(double));
+  _setMemoryDouble(*col_sums, 0.0, *ncol);
 
   cur_row = 0;
   cur_samp = 0;
@@ -193,7 +149,7 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
   // read values and calculate column sums
   while (cur_samp < nsamp) {
     // skip empty rows
-    while (it == row_ptr[cur_row + 1]) {
+    while (it == (*row_ptr)[cur_row + 1]) {
       cur_row++;
     }
 
@@ -202,15 +158,14 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
       cur_samp++;
     }
 
-    if (cur_samp >= nsamp || samples[cur_samp] > nrow) {
+    if (cur_samp >= nsamp || samples[cur_samp] > *nrow) {
       break;
     }
-
 
     // here: samples[cur_samp] - 1 is at least cur_row
     // while cur_row is lesser than
     while ((samples[cur_samp] - 1) > cur_row) {
-      while (it < row_ptr[cur_row + 1]) {
+      while (it < (*row_ptr)[cur_row + 1]) {
         READ(file, "%lf", &double_trash);
         it++;
       }
@@ -218,10 +173,10 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
     }
 
     // here samples[cur_samp] - 1 == cur_row
-    while (it < row_ptr[cur_row + 1]) {
+    while (it < (*row_ptr)[cur_row + 1]) {
       READ(file, "%lf", (val + cur_val));
 
-      col_sums[col_ind[cur_val]] += val[cur_val];
+      (*col_sums)[col_ind[cur_val]] += val[cur_val];
       it++;
       cur_val++;
     }
@@ -232,8 +187,73 @@ SEXP _readSamplesSpRfnFilter(FILE* file, const int* samples, int* row_ptr, int* 
 
   fclose(file);
 
-  return _filterColumnsAndCreateMatrix(new_row_ptr, col_ind, val, new_nnz, new_nrow, ncol, col_sums, lowerB, 
-      upperB);
+  *row_ptr = new_row_ptr;
+  *nnz = cur_val;
+  *nrow = cur_samp;
+
+  return 0;
+}
+
+int _readSamplesAndCalculateColSums(const char* file_name, int** row_ptr, int** col_ind, double** val, 
+    int* nrow, int* nnz, const double lowerB, const double upperB, 
+    const int* samples, const int nsamp, double** col_sums, int* ncol) {
+  FILE* file = fopen(file_name, "r");
+
+  if (file == NULL) {
+    Rprintf("File %s not found!\n", file_name);
+    return -1;
+  }
+
+  READ(file, "%d\n", nrow);
+  CHECK(nrow > 0, file);
+
+  READ(file, "%d\n", nnz);
+  CHECK(nnz > 0, file);
+
+  *row_ptr = (int*) R_alloc(*nrow + 1, sizeof(int));
+  *col_ind = (int*) R_alloc(*nnz, sizeof(int));
+  *val = (double*) R_alloc(*nnz, sizeof(double));
+
+  if (samples[0] <= 0) {
+    return _readAllSamplesAndCalculateColSums(file, *row_ptr, *col_ind, *val, *nrow, *nnz, lowerB, upperB, 
+      col_sums, ncol);
+  } else {
+    return _readFilteredSamplesAndCalculateColSums(file, row_ptr, *col_ind, *val, nrow, nnz, lowerB,
+      upperB, samples, nsamp, col_sums, ncol);
+  }
+}
+
+
+/*********************************************
+ * READ SAMPLES SPARSE RFN                   *
+ ********************************************/
+
+void _sparseToDenseMatrix(double* dense, const int* row_ptr, const int* col_ind, const double* val, 
+    const int ncol, const int nnz, const double* col_sums, const double lowerB, 
+    const double upperB) {
+  int cur_row = 0;
+  for (int i = 0; i < nnz; i++) {
+    while (i >= row_ptr[cur_row + 1]) {
+      cur_row++;
+    }
+    int col = col_ind[i];
+    if (col_sums[col] > lowerB && col_sums[col] < upperB) {
+      dense[cur_row * ncol + col] = val[i];
+    }
+   }
+}
+
+SEXP _filterColumnsAndCreateMatrix(const int* row_ptr, const int* col_ind, const double* val, 
+    const int nnz, const int nrow, const int ncol, const double* col_sums, double lowerB, 
+    double upperB) {
+  SEXP XS = PROTECT(allocMatrix(REALSXP, ncol, nrow));
+  double* X = REAL(XS);
+  _setMemoryDouble(X, 0.0, nrow * ncol);
+
+  _sparseToDenseMatrix(X, row_ptr, col_ind, val, ncol, nnz, col_sums, lowerB, upperB);
+
+  UNPROTECT(1);
+  return XS;
 }
 
 // sampleS are sorted integers. LENGTH(sampleS) <= nrow
@@ -245,37 +265,107 @@ SEXP readSamplesSpRfn(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS
   const int* samples = INTEGER(samplesS);
   const int nsamp = LENGTH(samplesS);
 
-  FILE* file = fopen(file_name, "r");
+  int* row_ptr;
+  int* col_ind;
+  double* val;
+  int nrow;
+  int nnz;
 
-  if (file == NULL) {
-    Rprintf("File %s not found!\n", file_name);
+  double* col_sums;
+  int ncol;
+
+  if (_readSamplesAndCalculateColSums(file_name, &row_ptr, &col_ind, &val, &nrow, &nnz, lowerB, 
+    upperB, samples, nsamp, &col_sums, &ncol) < 0) {
     return R_NilValue;
   }
 
-  int nrow, nnz;
-
-  READ(file, "%d\n", &nrow);
-  CHECK(nrow > 0, file);
-
-  READ(file, "%d\n", &nnz);
-  CHECK(nnz > 0, file);
-
-  int* row_ptr = (int*) R_alloc(nrow + 1, sizeof(int));
-  int* col_ind = (int*) R_alloc(nnz, sizeof(int));
-  double* val = (double*) R_alloc(nnz, sizeof(double));
-
-  if (samples[0] <= 0) {
-    return _readSamplesSpRfnAll(file, row_ptr, col_ind, val, nrow, nnz, lowerB, upperB);
-  } else {
-    return _readSamplesSpRfnFilter(file, samples, row_ptr, col_ind, val, nrow, nnz, nsamp, 
-      lowerB, upperB);
-  }
+  return _filterColumnsAndCreateMatrix(row_ptr, col_ind, val, nnz, nrow, ncol, col_sums, lowerB, 
+      upperB);
 }
 
+
+/*********************************************
+ * SAMPLES PER FEATURE                       *
+ *********************************************/
+
+SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
+  const char* file_name = CHAR(STRING_ELT(file_nameS, 0));
+
+  const double lowerB = (double) (REAL(lowerBS)[0]);
+  const double upperB = (double) (REAL(upperBS)[0]);
+  const int* samples = INTEGER(samplesS);
+  const int nsamp = LENGTH(samplesS);
+
+  int* row_ptr;
+  int* col_ind;
+  double* val;
+  int nrow;
+  int nnz;
+
+  double* col_sums;
+  int ncol;
+
+  if (_readSamplesAndCalculateColSums(file_name, &row_ptr, &col_ind, &val, &nrow, &nnz, lowerB, 
+    upperB, samples, nsamp, &col_sums, &ncol) < 0) {
+    return R_NilValue;
+  }
+
+  SEXP nsLS = PROTECT(allocVector(INTSXP, ncol));
+  SEXP sLS = PROTECT(allocVector(VECSXP, ncol));
+
+  int* nsL = INTEGER(nsLS);
+  _setMemoryInt(nsL, 0, ncol);
+
+  for (int i = 0; i < nnz; i++) {
+    int col = col_ind[i];
+    if (col_sums[col] > lowerB && col_sums[col] < upperB) {
+      nsL[col]++;
+    }
+  }
+
+  for (int i = 0; i < ncol; i++) {
+    if (nsL[i] > 0) {
+      SET_VECTOR_ELT(sLS, i, allocVector(INTSXP, nsL[i]));
+    } else {
+      SET_VECTOR_ELT(sLS, i, allocVector(INTSXP, 1));
+      INTEGER(VECTOR_ELT(sLS, i))[0] = 0;
+    }
+  }
+
+  int* indices = (int*) R_alloc(ncol, sizeof(int));
+  _setMemoryInt(indices, 0, ncol);
+
+  int cur_row = 0;
+  for (int i = 0; i < nnz; i++) {
+    while (i >= row_ptr[cur_row + 1]) {
+      cur_row++;
+    }
+    int col = col_ind[i];
+    if (nsL[col] > 0) {
+      INTEGER(VECTOR_ELT(sLS, col))[indices[col]] = cur_row + 1;
+      
+      indices[col]++;
+    }
+  }
+
+  SEXP namesS = PROTECT(allocVector(STRSXP, 2));
+  SET_STRING_ELT(namesS, 0, mkChar("sL"));
+  SET_STRING_ELT(namesS, 1, mkChar("nsL"));
+
+  SEXP outS = PROTECT(allocVector(VECSXP, 2));
+  SET_VECTOR_ELT(outS, 0, sLS);
+  SET_VECTOR_ELT(outS, 1, nsLS);
+
+  setAttrib(outS, R_NamesSymbol, namesS);
+  UNPROTECT(4);
+
+  return outS;
+}
 
 
 R_CallMethodDef callMethods[] = {
   {"readSamplesSpRfn", (DL_FUNC) &readSamplesSpRfn, 4},
+  {"samplesPerFeature", (DL_FUNC) &readSamplesSpRfn, 4},
   {NULL, NULL, 0}
 };
 
