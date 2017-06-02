@@ -34,6 +34,28 @@ readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   return(res)
 }
 
+vcf2sparse <- function(fileName, prefixPath = "", noSnvs = NULL, 
+                       outputFile = NULL) {
+  message("Running 'vcftoFABIA' on ", fileName)
+  message("   Path to file ----------------------- : ", prefixPath)
+  if (!is.null(noSnvs)) {
+    message("   Number of SNVs --------------------- : ", noSnvs)
+  } else {
+    message("   Number of SNVs are unknown --------- :")
+  }
+  if (!is.null(outputFile)) {
+    message("   Output file prefix------------------ : ", outputFile)
+  } else {
+    message("   Output file prefix given by input ----")
+  }
+
+  .Call("vcf2sparse", fileName, prefixPath, noSnvs, outputFile, PACKAGE = "hapRFN")
+
+  message("")
+  message("Convert End.")
+}
+
+
 iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize = 10000, 
   annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
   annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", individuals = 0, 

@@ -1,1 +1,7 @@
+
 import(Rhtslib)
+
+useDynLib(hapRFN)
+
+
+export(samplesPerFeature, readSamplesSpRfn, vcf2sparse)
