@@ -18,19 +18,19 @@
  * COMMON FUNCTIONS                         *
  ********************************************/
 
-void _setMemoryDouble(double* array, const double value, const int n) {
+void set_memory_double(double* array, const double value, const int n) {
   for (int i = 0; i < n; i++) {
     array[i] = value;
   }
 }
 
-void _setMemoryInt(int* array, const int value, const int n) {
+void set_memory_int(int* array, const int value, const int n) {
   for (int i = 0; i < n; i++) {
     array[i] = value;
   }
 }
 
-int _readAllSamplesAndCalculateColSums(FILE* file, int* row_ptr, int* col_ind, double* val, 
+int read_all_samples_and_calculate_col_sums(FILE* file, int* row_ptr, int* col_ind, double* val, 
     const int nrow, const int nnz, const double lowerB, const double upperB, 
     double** col_sums, int* ncol) {
   // read row pointers
@@ -49,7 +49,7 @@ int _readAllSamplesAndCalculateColSums(FILE* file, int* row_ptr, int* col_ind, d
   *ncol = max_col + 1;
 
   *col_sums = (double*) R_alloc(*ncol, sizeof(double));
-  _setMemoryDouble(*col_sums, 0.0, *ncol);
+  set_memory_double(*col_sums, 0.0, *ncol);
 
   // read values and calculate column sums
   for (int i = 0; i < nnz; i++) {
@@ -62,7 +62,7 @@ int _readAllSamplesAndCalculateColSums(FILE* file, int* row_ptr, int* col_ind, d
   return 0;
 }
 
-int _readFilteredSamplesAndCalculateColSums(FILE* file, int** row_ptr, int* col_ind, double* val, 
+int read_filtered_samples_and_calculate_col_sums(FILE* file, int** row_ptr, int* col_ind, double* val, 
     int* nrow, int* nnz, const double lowerB, const double upperB, const int* samples, 
     const int nsamp, double** col_sums, int* ncol) {
   int cur_samp = 0;
@@ -140,7 +140,7 @@ int _readFilteredSamplesAndCalculateColSums(FILE* file, int** row_ptr, int* col_
   *ncol = max_col + 1;
 
   *col_sums = (double*) R_alloc(*ncol, sizeof(double));
-  _setMemoryDouble(*col_sums, 0.0, *ncol);
+  set_memory_double(*col_sums, 0.0, *ncol);
 
   cur_row = 0;
   cur_samp = 0;
@@ -194,7 +194,7 @@ int _readFilteredSamplesAndCalculateColSums(FILE* file, int** row_ptr, int* col_
   return 0;
 }
 
-int _readSamplesAndCalculateColSums(const char* file_name, int** row_ptr, int** col_ind, double** val, 
+int read_samples_and_calculate_col_sums(const char* file_name, int** row_ptr, int** col_ind, double** val, 
     int* nrow, int* nnz, const double lowerB, const double upperB, 
     const int* samples, const int nsamp, double** col_sums, int* ncol) {
   FILE* file = fopen(file_name, "r");
@@ -215,10 +215,10 @@ int _readSamplesAndCalculateColSums(const char* file_name, int** row_ptr, int** 
   *val = (double*) R_alloc(*nnz, sizeof(double));
 
   if (samples[0] <= 0) {
-    return _readAllSamplesAndCalculateColSums(file, *row_ptr, *col_ind, *val, *nrow, *nnz, lowerB, upperB, 
+    return read_all_samples_and_calculate_col_sums(file, *row_ptr, *col_ind, *val, *nrow, *nnz, lowerB, upperB, 
       col_sums, ncol);
   } else {
-    return _readFilteredSamplesAndCalculateColSums(file, row_ptr, *col_ind, *val, nrow, nnz, lowerB,
+    return read_filtered_samples_and_calculate_col_sums(file, row_ptr, *col_ind, *val, nrow, nnz, lowerB,
       upperB, samples, nsamp, col_sums, ncol);
   }
 }
@@ -228,7 +228,7 @@ int _readSamplesAndCalculateColSums(const char* file_name, int** row_ptr, int** 
  * READ SAMPLES SPARSE RFN                   *
  ********************************************/
 
-void _sparseToDenseMatrix(double* dense, const int* row_ptr, const int* col_ind, const double* val, 
+void sparse_to_dense(double* dense, const int* row_ptr, const int* col_ind, const double* val, 
     const int ncol, const int nnz, const double* col_sums, const double lowerB, 
     const double upperB) {
   int cur_row = 0;
@@ -243,14 +243,14 @@ void _sparseToDenseMatrix(double* dense, const int* row_ptr, const int* col_ind,
    }
 }
 
-SEXP _filterColumnsAndCreateMatrix(const int* row_ptr, const int* col_ind, const double* val, 
+SEXP filter_columns_and_create_matrix(const int* row_ptr, const int* col_ind, const double* val, 
     const int nnz, const int nrow, const int ncol, const double* col_sums, double lowerB, 
     double upperB) {
   SEXP XS = PROTECT(allocMatrix(REALSXP, ncol, nrow));
   double* X = REAL(XS);
-  _setMemoryDouble(X, 0.0, nrow * ncol);
+  set_memory_double(X, 0.0, nrow * ncol);
 
-  _sparseToDenseMatrix(X, row_ptr, col_ind, val, ncol, nnz, col_sums, lowerB, upperB);
+  sparse_to_dense(X, row_ptr, col_ind, val, ncol, nnz, col_sums, lowerB, upperB);
 
   UNPROTECT(1);
   return XS;
@@ -274,12 +274,12 @@ SEXP readSamplesSpRfn(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS
   double* col_sums;
   int ncol;
 
-  if (_readSamplesAndCalculateColSums(file_name, &row_ptr, &col_ind, &val, &nrow, &nnz, lowerB, 
+  if (read_samples_and_calculate_col_sums(file_name, &row_ptr, &col_ind, &val, &nrow, &nnz, lowerB, 
     upperB, samples, nsamp, &col_sums, &ncol) < 0) {
     return R_NilValue;
   }
 
-  return _filterColumnsAndCreateMatrix(row_ptr, col_ind, val, nnz, nrow, ncol, col_sums, lowerB, 
+  return filter_columns_and_create_matrix(row_ptr, col_ind, val, nnz, nrow, ncol, col_sums, lowerB, 
       upperB);
 }
 
@@ -305,7 +305,7 @@ SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperB
   double* col_sums;
   int ncol;
 
-  if (_readSamplesAndCalculateColSums(file_name, &row_ptr, &col_ind, &val, &nrow, &nnz, lowerB, 
+  if (read_samples_and_calculate_col_sums(file_name, &row_ptr, &col_ind, &val, &nrow, &nnz, lowerB, 
     upperB, samples, nsamp, &col_sums, &ncol) < 0) {
     return R_NilValue;
   }
@@ -314,7 +314,7 @@ SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperB
   SEXP sLS = PROTECT(allocVector(VECSXP, ncol));
 
   int* nsL = INTEGER(nsLS);
-  _setMemoryInt(nsL, 0, ncol);
+  set_memory_int(nsL, 0, ncol);
 
   for (int i = 0; i < nnz; i++) {
     int col = col_ind[i];
@@ -333,7 +333,7 @@ SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperB
   }
 
   int* indices = (int*) R_alloc(ncol, sizeof(int));
-  _setMemoryInt(indices, 0, ncol);
+  set_memory_int(indices, 0, ncol);
 
   int cur_row = 0;
   for (int i = 0; i < nnz; i++) {
