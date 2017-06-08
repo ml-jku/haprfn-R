@@ -5,3 +5,4 @@ useDynLib(hapRFN)
 
 
 export(samplesPerFeature, readSamplesSpRfn, vcf2sparse)
+export("vcf2sparse")
