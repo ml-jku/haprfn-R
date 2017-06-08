@@ -35,10 +35,10 @@ void matrix_destroy(sparse_matrix_t* matrix) {
 }
 
 // file_name must be released
-char *create_file_name(const char *file_name, const char *postfix, const size_t interval, const size_t interval_size) {
+char *create_file_name(const char *file_name, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
   static char buffer[100];
   
-  sprintf(buffer, "%zd-%zd", interval * interval_size, (interval + 1) * interval_size);
+  sprintf(buffer, "%zd-%zd", lower_interval, upper_interval);
 
   char *fn = (char*) calloc(strlen(file_name) + strlen(buffer) + strlen(postfix) + 1, sizeof(char));
   strcat(fn, file_name);
@@ -48,18 +48,24 @@ char *create_file_name(const char *file_name, const char *postfix, const size_t 
   return fn;
 }
 
-FILE *open_file(const char *file_name, const char *postfix, const size_t interval, const size_t interval_size) {
-  char *fn = create_file_name(file_name, postfix, interval, interval_size);
-  FILE *f = fopen(fn, "w");
-  if (!f) {
+FILE *open_file(const char *file_name, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
+  char *fn = create_file_name(file_name, postfix, lower_interval, upper_interval);
+  FILE *file = fopen(fn, "w");
+  if (!file) {
     REprintf("Cannot open file %s\n", fn);
   }
   free(fn);
-  return f;
+  return file;
 }
 
-FILE *open_annotation_file(const char *file_name, const size_t interval, const size_t interval_size) {
-  return open_file(file_name, "_annot.txt", interval, interval_size);
+void write_to_annotation_file(const char *file_name, const char* string, const size_t lower_interval, const size_t upper_interval) {
+  FILE *file = open_file(file_name, "_annot.txt", lower_interval, upper_interval);
+  if (!file) {
+    REprintf("Cannot write annotation file for interval %zd-%zd\n", lower_interval, upper_interval);
+    return;
+  }
+  fputs(string, file);
+  fclose(file);
 }
 
 unsigned short** create_matrix(const size_t multiple, const size_t nrow, const size_t ncol) {
@@ -118,18 +124,18 @@ void write_sparse_matrix(sparse_matrix_t *matrix, FILE *file) {
 }
 
 void write_dense_matrices_as_sparse(unsigned short **matrix, unsigned int *nnz, const size_t multiple, const size_t nrow, 
-    const size_t ncol, const char* file_name, const size_t interval) {
-  FILE *f = open_file(file_name, "_mat.txt", interval, nrow);
-  if (!f) {
-    REprintf("Cannot write sparse matrix to file for interval %d\n", interval);
+    const size_t ncol, const char* file_name, const size_t lower_interval, const size_t upper_interval) {
+  FILE *file = open_file(file_name, "_mat.txt", lower_interval, upper_interval);
+  if (!file) {
+    REprintf("Cannot write sparse matrix to file for interval %zd-%zd\n", lower_interval, upper_interval);
     return;
   }
   
-  sparse_matrix_t* sp_matrix = dense_to_sparse(matrix, nnz, multiple * nrow, ncol);
-  write_sparse_matrix(sp_matrix, f);
+  sparse_matrix_t *sp_matrix = dense_to_sparse(matrix, nnz, multiple * nrow, ncol);
+  write_sparse_matrix(sp_matrix, file);
 
   matrix_destroy(sp_matrix);
-  fclose(f);
+  fclose(file);
 }
 
 void flip_matrix(unsigned short **matrix, unsigned int *nnz, const size_t multiple, const size_t nrow, const size_t ncol) {
@@ -200,24 +206,21 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
   set_zerov(current_nnz, MAX_PLOIDY, interval_size);
   set_zerov(next_nnz, MAX_PLOIDY, interval_size);
 
-  FILE *current_annot_file = NULL;
-  FILE *next_annot_file = NULL;
-  if (annotate) {
-    current_annot_file = open_annotation_file(file_name, 0, interval_size);
-    next_annot_file = open_annotation_file(file_name, 1, interval_size);
-  }
-
   bcf = bcf_init();
 
   size_t haplo = MAX_PLOIDY;
-  size_t snp = 0;
-  kstring_t buffer = { 0, 0, NULL };
+
+  kstring_t* buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
+  kstring_t* current_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
+  kstring_t* next_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
+  kstring_t* tmps;
 
   size_t current_interval = 0;
   size_t next_interval = 0;
   size_t n_interval = 0;
 
   while (bcf_read(file, hdr, bcf) >= 0) {
+    Rprintf("Pos %d\n", bcf->pos);
     int32_t *gt_arr = NULL, ngt_arr = 0;
     int ngt = bcf_get_genotypes(hdr, bcf, &gt_arr, &ngt_arr);
 
@@ -249,7 +252,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
             current_matrix[index][i] = allele_index;
             current_nnz[index]++;
           
-            if (interval_size - current_interval < shift_size) {
+            if (interval_size - current_interval <= shift_size) {
               size_t row = j * interval_size + next_interval;
               next_matrix[row][i] = allele_index;
               next_nnz[row]++;
@@ -260,18 +263,18 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
     }
 
     if (annotate) {
-      vcf_format(hdr, bcf, &buffer, 1); 
-      fprintf(current_annot_file, "%s", buffer.s);
+      vcf_format(hdr, bcf, buffer, 1);
+      kputsn(buffer->s, buffer->l, current_buffer);
 
-      if (interval_size - current_interval < shift_size) {
-        fprintf(next_annot_file, "%s", buffer.s);
+      if (interval_size - current_interval <= shift_size) {
+        kputsn(buffer->s, buffer->l, next_buffer);
       }
 
-      buffer.s[0] = 0;
-      buffer.l = 0;
+      buffer->s[0] = 0;
+      buffer->l = 0;
     } // annotate
 
-    if (interval_size - current_interval < shift_size) {
+    if (interval_size - current_interval <= shift_size) {
       next_interval++;
     }
 
@@ -280,7 +283,8 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
     // start a new interval
     if (current_interval % interval_size == 0) {
       flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, file_name, n_interval);
+      size_t lower_interval = n_interval * (interval_size - shift_size);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, file_name, lower_interval, lower_interval + interval_size);
 
       tmpm = current_matrix;
       current_matrix = next_matrix;
@@ -292,27 +296,34 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
       next_nnz = tmpv;
       set_zerov(next_nnz, haplo, interval_size);
 
+      if (annotate) {
+        write_to_annotation_file(file_name, current_buffer->s, lower_interval, lower_interval + interval_size);
+
+        tmps = current_buffer;
+        current_buffer = next_buffer;
+        next_buffer = tmps;
+
+        next_buffer->s[0] = 0;
+        next_buffer->l = 0;
+      }
+
       current_interval = next_interval;
       next_interval = 0;
 
-      if (annotate) {
-        fclose(current_annot_file);
-        current_annot_file = next_annot_file;
-        next_annot_file = open_annotation_file(file_name, n_interval + 1, interval_size);
-      }
-
       n_interval++;
     }
-
-
-    // only for testing
-    if (snp > 12000) {
-      break;
-    }
-    snp++;
   }
-  if (current_annot_file) fclose(current_annot_file);
-  if (next_annot_file) fclose(next_annot_file);
+
+  if (current_interval > 0) {
+      flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
+
+      size_t lower_interval = n_interval * (interval_size - shift_size);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, current_interval, nsamp, file_name, lower_interval, lower_interval + current_interval);
+
+      if (annotate) {
+        write_to_annotation_file(file_name, current_buffer->s, lower_interval, lower_interval + current_interval);  
+      }
+  }
 
 cleanup:
   if (bcf) bcf_destroy(bcf);
