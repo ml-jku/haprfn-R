@@ -1,7 +1,7 @@
-#include <R_ext/Rdynload.h>
 #include <R_ext/Boolean.h>
 #include <Rinternals.h>
 #include <stdint.h>
+#include "interface.h"
 #include "vcf.h"
 #include "kstring.h"
 

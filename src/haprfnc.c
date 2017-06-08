@@ -1,5 +1,5 @@
-#include <R_ext/Rdynload.h>
 #include <Rinternals.h>
+#include "interface.h"
 
 #define GET_MACRO(_1,_2,_3,_4,NAME,...) NAME
 
@@ -360,19 +360,4 @@ SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperB
   UNPROTECT(4);
 
   return outS;
-}
-
-
-R_CallMethodDef callMethods[] = {
-  {"readSamplesSpRfn", (DL_FUNC) &readSamplesSpRfn, 4},
-  {"samplesPerFeature", (DL_FUNC) &samplesPerFeature, 4},
-  {NULL, NULL, 0}
-};
-
-void R_init_myLib(DllInfo *info) {
-  R_registerRoutines(info, NULL, callMethods, NULL, NULL);
-}
-
-int main() {
-  return 1;
 }
