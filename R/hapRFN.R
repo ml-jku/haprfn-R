@@ -51,7 +51,6 @@ vcf2sparse <- function(fileName, intervalSize = 10000, shiftSize = 5000,
   message("Convert End.")
 }
 
-
 iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize = 10000, 
   annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
   annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", individuals = 0, 
@@ -60,11 +59,13 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
   Lt = 0.1, Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03, 
   haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", 
   minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100) {
+
   labelsA <- c()
   annot <- c()
   
   ina <- as.numeric(readLines(paste(prefixPath, fileName, sparseMatrixPostfix, 
-    ".txt", sep = ""), n = 2))
+                    ".txt", sep = ""), n = 2))
+  # These information are missing, have to change this.
   individualsN <- ina[1]
   snvs <- ina[2]
   
@@ -80,7 +81,6 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
     
     pRange <- paste("_", format(start, scientific = FALSE), "_", format(end, 
       scientific = FALSE), sep = "")
-    
     
     if (is.null(annotationFile)) {
       labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
