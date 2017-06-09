@@ -220,7 +220,6 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
   size_t n_interval = 0;
 
   while (bcf_read(file, hdr, bcf) >= 0) {
-    Rprintf("Pos %d\n", bcf->pos);
     int32_t *gt_arr = NULL, ngt_arr = 0;
     int ngt = bcf_get_genotypes(hdr, bcf, &gt_arr, &ngt_arr);
 
@@ -252,7 +251,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
             current_matrix[index][i] = allele_index;
             current_nnz[index]++;
           
-            if (interval_size - current_interval <= shift_size) {
+            if (current_interval >= shift_size) {
               size_t row = j * interval_size + next_interval;
               next_matrix[row][i] = allele_index;
               next_nnz[row]++;
@@ -266,7 +265,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
       vcf_format(hdr, bcf, buffer, 1);
       kputsn(buffer->s, buffer->l, current_buffer);
 
-      if (interval_size - current_interval <= shift_size) {
+      if (current_interval >= shift_size) {
         kputsn(buffer->s, buffer->l, next_buffer);
       }
 
@@ -274,7 +273,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
       buffer->l = 0;
     } // annotate
 
-    if (interval_size - current_interval <= shift_size) {
+    if (current_interval >= shift_size) {
       next_interval++;
     }
 
@@ -283,7 +282,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
     // start a new interval
     if (current_interval % interval_size == 0) {
       flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
-      size_t lower_interval = n_interval * (interval_size - shift_size);
+      size_t lower_interval = n_interval * shift_size;
       write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, file_name, lower_interval, lower_interval + interval_size);
 
       tmpm = current_matrix;
@@ -317,7 +316,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
   if (current_interval > 0) {
       flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
 
-      size_t lower_interval = n_interval * (interval_size - shift_size);
+      size_t lower_interval = n_interval * shift_size;
       write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, current_interval, nsamp, file_name, lower_interval, lower_interval + current_interval);
 
       if (annotate) {
