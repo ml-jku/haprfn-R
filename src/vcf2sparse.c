@@ -38,7 +38,7 @@ void matrix_destroy(sparse_matrix_t* matrix) {
 char *create_file_name(const char *file_name, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
   static char buffer[100];
   
-  sprintf(buffer, "%zd-%zd", lower_interval, upper_interval);
+  sprintf(buffer, "_%zd_%zd", lower_interval, upper_interval);
 
   char *fn = (char*) calloc(strlen(file_name) + strlen(buffer) + strlen(postfix) + 1, sizeof(char));
   strcat(fn, file_name);
