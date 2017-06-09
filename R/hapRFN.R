@@ -72,9 +72,9 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
   save(individualsN, snvs, file = paste(fileName, "_All", ".Rda", sep = ""))
   
   for (posAll in startRun:endRun) {
-    start <- (posAll - 1) * shift
+    start <- (posAll - 1) * shifs
     end <- start + intervalSize
-    
+
     if (end > snvs) {
       end <- snvs
     }
@@ -82,16 +82,21 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
     pRange <- paste("_", format(start, scientific = FALSE), "_", format(end, 
       scientific = FALSE), sep = "")
     
+	# If there is no annotation file
     if (is.null(annotationFile)) {
+	
+      # Read individuals file
       labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
         sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
+        
+      # If there is only 1 individual in the individuals file
       if (length(labelsAA[, 2]) < 2) {
-        if (haplotypes) {
+        if (haplotypes) { # If phased genotypes
           lA <- as.vector(unlist(rbind(1:individualsN, 1:individualsN)))
-        } else {
+        } else { # Else unphased genotypes
           lA <- as.vector(1:individualsN)
         }
-      } else {
+      } else { # Else more than one individual in the file
         if (haplotypes) {
           lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
         } else {
@@ -100,7 +105,7 @@ iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize
       }
       indiA <- cbind(as.character(lA), as.character(lA), as.character(lA), 
         as.character(lA))
-    } else {
+    } else { # Annotation file exists
       indit <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", 
         as.is = TRUE)
       lind <- length(indit)
@@ -346,10 +351,8 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   message("                      ")
   message("                      ")
   
-  
-  
+  # Maybe remove this when dependency added?
   require("fabia")
-  
   
   # Compute internal parameters
   
@@ -357,7 +360,6 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   ps <- 1 - Lt
   # psZ: quantile above which to consider Zs
   psZ <- 1 - Zt
-  
   
   # compute histogram length
   if (IBDsegmentLength > 0) {
@@ -400,14 +402,14 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   # build DgC Matrix
   
-  filename1 <- paste(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt", 
-    sep = "")
-  
+  filename1 <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt")
   
   filenamelist <- list(filename1)
   
+  # What is this?
   res1 <- readsparsematrixlist(filenamelist)
   
+  # What is this?
   X <- fillmat2(res1)
   
   
@@ -484,7 +486,7 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
     # minor allele otherwise 0
     
     annot <- read.table(paste(prefixPath, fileName, pRange, annotPostfix, sep = ""), 
-      header = FALSE, sep = " ", quote = "", as.is = TRUE, skip = 2)
+      header = FALSE, sep = "\t", quote = "", as.is = TRUE, skip = 2)
     
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub(",", ";", annot[[i]])
@@ -492,7 +494,6 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
     
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub("TRUE", "T", annot[[i]])
-      
     }
     
     annot[[2]] <- as.numeric(annot[[2]])  # physical position
@@ -539,7 +540,6 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   # merge IBD segment lists
   
-  
   if (lengthList(IBDsegmentList1) > 1) {
     comp <- compareIBDsegmentLists(IBDsegmentList1 = IBDsegmentList1, IBDsegmentList2 = NULL, 
       simv = simv, pTagSNVs = NULL, pIndivid = NULL, minTagSNVs = minTagSNVs, 
@@ -559,8 +559,7 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   # second IBD extraction with offset half of the interval length
   
-  
-  off2 = inteA%/%2
+  off2 = inteA %/% 2
   
   IBDsegmentList2 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
     labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA, thresA = thresA, mintagSNVs = mintagSNVs, 
