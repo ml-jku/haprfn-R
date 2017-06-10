@@ -1,6 +1,6 @@
 #include <R_ext/Boolean.h>
 #include <Rinternals.h>
-#include <stdint.h>
+#include <stdlib.h>
 #include "interface.h"
 #include "vcf.h"
 #include "kstring.h"
