@@ -45,6 +45,7 @@ void matrix_destroy(sparse_matrix_t* matrix) {
 
 static const char AnnotationPostfix[] = "_annot";
 static const char IndividualsPostfix[] = "_individuals.txt";
+static const char InfoPostfix[] = "_info.txt";
 static const char MatrixPostfix[] = "_mat.txt";
 static const char VcfGzPostfix[] = ".vcf.gz";
 static const size_t IgnoreInterval = -1;
@@ -238,7 +239,10 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   size_t next_interval = 0;
   size_t n_interval = 0;
 
+  size_t nsnp = 0;
   while (bcf_read(file, hdr, bcf) >= 0) {
+    nsnp++;
+
     int32_t *gt_arr = NULL, ngt_arr = 0;
     int ngt = bcf_get_genotypes(hdr, bcf, &gt_arr, &ngt_arr);
 
@@ -342,6 +346,15 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
         write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
       }
   }
+
+  FILE *info = open_file(output_file, prefix_path, InfoPostfix, IgnoreInterval, IgnoreInterval);
+  if (!info) {
+    REprintf("Cannot write to info file!\n");
+  } else {
+    fprintf("%zu\n%zu", nsamp, nsnp);
+    fclose(info);
+  }
+
 
 cleanup:
   if (vcfgz_file_name) free(vcfgz_file_name);

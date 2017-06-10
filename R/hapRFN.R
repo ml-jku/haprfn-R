@@ -52,8 +52,9 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 }
 
 iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 10000, 
-  annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
-  annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", individuals = 0, 
+  annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
+  annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", 
+  infoPostfix = "_info.txt", individuals = 0, 
   lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, quant = 0.01, eps = 1e-05, alpha = 0.03, 
   cyc = 50, non_negative = 1, write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50, 
   Lt = 0.1, Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03, 
@@ -63,13 +64,12 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
   labelsA <- c()
   annot <- c()
   
-  ina <- as.numeric(readLines(paste(prefixPath, fileName, sparseMatrixPostfix, 
-                    ".txt", sep = ""), n = 2))
-  # These information are missing, have to change this.
-  individualsN <- ina[1]
-  snvs <- ina[2]
+  info <- as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2))
   
-  save(individualsN, snvs, file = paste(fileName, "_All", ".Rda", sep = ""))
+  nsamples <- ina[1]
+  nsnvs <- ina[2]
+  
+  save(nsamples, snvs, file = paste(fileName, "_All", ".Rda", sep = ""))
   
   for (posAll in startRun:endRun) {
     start <- (posAll - 1) * shifs
@@ -92,9 +92,9 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       # If there is only 1 individual in the individuals file
       if (length(labelsAA[, 2]) < 2) {
         if (haplotypes) { # If phased genotypes
-          lA <- as.vector(unlist(rbind(1:individualsN, 1:individualsN)))
+          lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
         } else { # Else unphased genotypes
-          lA <- as.vector(1:individualsN)
+          lA <- as.vector(1:nsamples)
         }
       } else { # Else more than one individual in the file
         if (haplotypes) {
@@ -125,7 +125,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:individualsN, 1:individualsN)))
+            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
           } else {
             lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
           }
@@ -137,7 +137,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:individualsN, 1:individualsN)))
+            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
           } else {
             lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
           }
@@ -149,7 +149,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:individualsN, 1:individualsN)))
+            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
           } else {
             lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
           }
@@ -161,7 +161,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:individualsN, 1:individualsN)))
+            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
           } else {
             lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
           }
@@ -174,7 +174,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:individualsN)
+            lA <- as.vector(1:nsamples)
           } else {
             lA <- as.vector(labelsAA[, 2])
           }
@@ -186,7 +186,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:individualsN)
+            lA <- as.vector(1:nsamples)
           } else {
             lA <- as.vector(labelsAA[, 2])
           }
@@ -198,7 +198,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:individualsN)
+            lA <- as.vector(1:nsamples)
           } else {
             lA <- as.vector(labelsAA[, 2])
           }
@@ -210,7 +210,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
             sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
           if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:individualsN)
+            lA <- as.vector(1:nsamples)
           } else {
             lA <- as.vector(labelsAA[, 2])
           }
