@@ -8,6 +8,10 @@
 #define MAX_PLOIDY 2
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+/****
+ * Sparse matrix structure
+ ****/
+
 typedef struct {
   size_t nrow;
   size_t nnz;
@@ -34,13 +38,30 @@ void matrix_destroy(sparse_matrix_t* matrix) {
   free(matrix);
 }
 
+/****
+ * File operations
+ ****/
+
+
+static const char AnnotationPostfix[] = "_annot";
+static const char IndividualsPostfix[] = "_individuals.txt";
+static const char MatrixPostfix[] = "_mat.txt";
+static const char VcfGzPostfix[] = ".vcf.gz";
+static const size_t IgnoreInterval = -1;
+
+
 // file_name must be released
-char *create_file_name(const char *file_name, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
+char *create_file_name(const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
   static char buffer[100];
   
-  sprintf(buffer, "_%zd_%zd", lower_interval, upper_interval);
+  if (lower_interval == IgnoreInterval || upper_interval == IgnoreInterval) {
+    buffer[0] = 0;
+  } else {
+    sprintf(buffer, "_%zd_%zd", lower_interval, upper_interval);  
+  }
 
-  char *fn = (char*) calloc(strlen(file_name) + strlen(buffer) + strlen(postfix) + 1, sizeof(char));
+  char *fn = (char*) calloc(strlen(prefix) + strlen(file_name) + strlen(buffer) + strlen(postfix) + 1, sizeof(char));
+  strcat(fn, prefix);
   strcat(fn, file_name);
   strcat(fn, buffer);
   strcat(fn, postfix);
@@ -48,8 +69,8 @@ char *create_file_name(const char *file_name, const char *postfix, const size_t 
   return fn;
 }
 
-FILE *open_file(const char *file_name, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
-  char *fn = create_file_name(file_name, postfix, lower_interval, upper_interval);
+FILE *open_file(const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
+  char *fn = create_file_name(file_name, prefix, postfix, lower_interval, upper_interval);
   FILE *file = fopen(fn, "w");
   if (!file) {
     REprintf("Cannot open file %s\n", fn);
@@ -58,8 +79,8 @@ FILE *open_file(const char *file_name, const char *postfix, const size_t lower_i
   return file;
 }
 
-void write_to_annotation_file(const char *file_name, const char* string, const size_t lower_interval, const size_t upper_interval) {
-  FILE *file = open_file(file_name, "_annot.txt", lower_interval, upper_interval);
+void write_to_annotation_file(const char *file_name, const char *prefix, const char *string, const size_t lower_interval, const size_t upper_interval) {
+  FILE *file = open_file(file_name, prefix, AnnotationPostfix, lower_interval, upper_interval);
   if (!file) {
     REprintf("Cannot write annotation file for interval %zd-%zd\n", lower_interval, upper_interval);
     return;
@@ -124,8 +145,8 @@ void write_sparse_matrix(sparse_matrix_t *matrix, FILE *file) {
 }
 
 void write_dense_matrices_as_sparse(unsigned short **matrix, unsigned int *nnz, const size_t multiple, const size_t nrow, 
-    const size_t ncol, const char* file_name, const size_t lower_interval, const size_t upper_interval) {
-  FILE *file = open_file(file_name, "_mat.txt", lower_interval, upper_interval);
+    const size_t ncol, const char *file_name, const char *prefix, const size_t lower_interval, const size_t upper_interval) {
+  FILE *file = open_file(file_name, prefix, MatrixPostfix, lower_interval, upper_interval);
   if (!file) {
     REprintf("Cannot write sparse matrix to file for interval %zd-%zd\n", lower_interval, upper_interval);
     return;
@@ -149,8 +170,9 @@ void flip_matrix(unsigned short **matrix, unsigned int *nnz, const size_t multip
   }
 }
 
-void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP output_fileS) {
+void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP output_fileS) {
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
+  const char *prefix_path = isNull(prefix_pathS) ? "" : CHAR(STRING_ELT(prefix_pathS, 0));
   const char *output_file = isNull(output_fileS) ? file_name : CHAR(STRING_ELT(output_fileS, 0));
   const Rboolean annotate = LOGICAL(annotateS)[0];
   const size_t interval_size = INTEGER(interval_sizeS)[0];
@@ -160,15 +182,14 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
   bcf_hdr_t *hdr = NULL;
   bcf1_t *bcf = NULL;
   FILE *individuals_file = NULL;
+  char *vcfgz_file_name;
 
-  char *vcfgz_file = R_alloc(strlen(file_name) + 8, sizeof(char));
-  vcfgz_file[0] = '\0';
-  strcat(vcfgz_file, file_name);
-  strcat(vcfgz_file, ".vcf.gz");
+
+  vcfgz_file_name = create_file_name(file_name, prefix_path, VcfGzPostfix, IgnoreInterval, IgnoreInterval);
 
   // Open .vcf.gz file
-  if (!(file = bcf_open(vcfgz_file, "r"))) {
-    REprintf("Cannot open file %s!\n", vcfgz_file);
+  if (!(file = bcf_open(vcfgz_file_name, "r"))) {
+    REprintf("Cannot open file %s!\n", vcfgz_file_name);
     goto cleanup;
   }
 
@@ -179,14 +200,12 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
   }
 
   // Print _individuals.txt
-  char *individuals_file_name = R_alloc(strlen(output_file) + 17, sizeof(char));
-  individuals_file_name[0] = '\0';
-  strcat(individuals_file_name, output_file);
-  strcat(individuals_file_name, "_individuals.txt");
-  if (!(individuals_file = fopen(individuals_file_name, "w"))) {
-    REprintf("Could not open file %s for writing!\n", individuals_file_name);
+  individuals_file = open_file(output_file, prefix_path, IndividualsPostfix, IgnoreInterval, IgnoreInterval);
+  if (!individuals_file) {
+    REprintf("Could not open individuals file for writing!\n");
     goto cleanup;
   }
+
   size_t nsamp = bcf_hdr_nsamples(hdr);
   for (int i = 0; i < nsamp; i++) {
     fprintf(individuals_file, "%d %s\n", i + 1, hdr->samples[i]);
@@ -283,7 +302,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
     if (current_interval % interval_size == 0) {
       flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, file_name, lower_interval, lower_interval + interval_size);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, file_name, prefix_path, lower_interval, lower_interval + interval_size);
 
       tmpm = current_matrix;
       current_matrix = next_matrix;
@@ -296,7 +315,7 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
       set_zerov(next_nnz, haplo, interval_size);
 
       if (annotate) {
-        write_to_annotation_file(file_name, current_buffer->s, lower_interval, lower_interval + interval_size);
+        write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + interval_size);
 
         tmps = current_buffer;
         current_buffer = next_buffer;
@@ -317,14 +336,15 @@ void vcf2sparse(SEXP file_nameS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP ann
       flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
 
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, current_interval, nsamp, file_name, lower_interval, lower_interval + current_interval);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, current_interval, nsamp, file_name, prefix_path, lower_interval, lower_interval + current_interval);
 
       if (annotate) {
-        write_to_annotation_file(file_name, current_buffer->s, lower_interval, lower_interval + current_interval);  
+        write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
       }
   }
 
 cleanup:
+  if (vcfgz_file_name) free(vcfgz_file_name);
   if (bcf) bcf_destroy(bcf);
   if (hdr) bcf_hdr_destroy(hdr);
 }

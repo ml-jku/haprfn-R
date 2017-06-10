@@ -34,24 +34,24 @@ readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   return(res)
 }
 
-vcf2sparse <- function(fileName, intervalSize = 10000, shiftSize = 5000, 
+vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000, 
                        annotation = TRUE, outputFile = NULL) {
   message("Running 'vcf2sparse' on ", fileName)
-  #message("   Path to file ----------------------- : ", prefixPath)
+  message("   Path to file ----------------------- : ", prefixPath)
   if (!is.null(outputFile)) {
     message("   Output file prefix------------------ : ", outputFile)
   } else {
     message("   Output file prefix given by input ----")
   }
 
-  .Call("vcf2sparse", fileName, as.integer(intervalSize), as.integer(shiftSize), annotation, outputFile, 
+  .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize), annotation, outputFile, 
         PACKAGE = "hapRFN")
 
   message("")
   message("Convert End.")
 }
 
-iterateIntervalsNew <- function(startRun = 1, endRun, shift = 5000, intervalSize = 10000, 
+iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 10000, 
   annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
   annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", individuals = 0, 
   lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, quant = 0.01, eps = 1e-05, alpha = 0.03, 
