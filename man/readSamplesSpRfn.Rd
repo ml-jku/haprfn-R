@@ -1,4 +1,4 @@
-\name{readSamplesSpRfn}}
+\name{readSamplesSpRfn}
 \alias{readSamplesSpRfn}
 \title{hapRFN: Read Sparse Matrix Samples}
 \description{
@@ -41,7 +41,7 @@ readSamplesSpRfn(X, samples = 0, lowerB = 0.0, upperB = 1000.0)
 }
 \value{
   \code{X} (data of the given samples)
-  }
+}
 \seealso{
 \code{\link{fabia}},
 }

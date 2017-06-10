@@ -65,26 +65,27 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
   annot <- c()
   
   info <- as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2))
-  
+
   nsamples <- ina[1]
   nsnvs <- ina[2]
   
-  save(nsamples, snvs, file = paste(fileName, "_All", ".Rda", sep = ""))
+  save(nsamples, snvs, file = paste0(fileName, "_All", ".Rda"))
   
   for (posAll in startRun:endRun) {
-    start <- (posAll - 1) * shifs
+    start <- (posAll - 1) * shift
     end <- start + intervalSize
 
     if (end > snvs) {
       end <- snvs
     }
     
-    pRange <- paste("_", format(start, scientific = FALSE), "_", format(end, 
-      scientific = FALSE), sep = "")
+    pRange <- paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
     
-	# If there is no annotation file
+    # If there is no annotation file
     if (is.null(annotationFile)) {
-	
+  
+
+
       # Read individuals file
       labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
         sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
@@ -106,12 +107,14 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       indiA <- cbind(as.character(lA), as.character(lA), as.character(lA), 
         as.character(lA))
     } else { # Annotation file exists
-      indit <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", 
-        as.is = TRUE)
+
+      # 
+      indit <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", as.is = TRUE)
       lind <- length(indit)
+
+      # Why would there be less than 4 columns? (All columns are mandatory)
       if (lind < 4) {
-        inditA <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", 
-          as.is = TRUE)
+        inditA <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", as.is = TRUE)
         if (length(inditA) > lind) {
           indit <- inditA
           lind <- length(inditA)
@@ -119,6 +122,10 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       }
       
       if (haplotypes) {
+
+
+        # lind # of snps
+        # indit annotations
         if (lind > 0) {
           indi1 <- as.vector(unlist(rbind(indit[, 1], indit[, 1])))  # because haplotypes individuals are doubled
         } else {
@@ -131,6 +138,8 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           }
           indi1 <- as.character(lA)
         }
+
+
         if (lind > 1) {
           indi2 <- as.vector(unlist(rbind(indit[, 2], indit[, 2])))
         } else {
@@ -143,6 +152,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           }
           indi2 <- as.character(lA)
         }
+
         if (lind > 2) {
           indi3 <- as.vector(unlist(rbind(indit[, 3], indit[, 3])))
         } else {
@@ -155,6 +165,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           }
           indi3 <- as.character(lA)
         }
+
         if (lind > 3) {
           indi4 <- as.vector(unlist(rbind(indit[, 4], indit[, 4])))
         } else {
@@ -168,6 +179,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           indi4 <- as.character(lA)
         }
       } else {
+
         if (lind > 0) {
           indi1 <- as.vector(indit[, 1])
         } else {
@@ -180,6 +192,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           }
           indi1 <- as.character(lA)
         }
+
         if (lind > 1) {
           indi2 <- as.vector(indit[, 2])
         } else {
@@ -192,6 +205,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           }
           indi2 <- as.character(lA)
         }
+
         if (lind > 2) {
           indi3 <- as.vector(indit[, 3])
         } else {
@@ -204,6 +218,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
           }
           indi3 <- as.character(lA)
         }
+
         if (lind > 3) {
           indi4 <- as.vector(indit[, 4])
         } else {
@@ -236,7 +251,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
     # as.vector(unlist(rbind(indit[,4],indit[,4]))) indi4 <- gsub(',',';',indi4)
     # indiA <- cbind(indi1,indi2,indi3,indi4)
     
-    resHapFabia <- hapFabiaNew(fileName = fileName, prefixPath = prefixPath, 
+    resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
       sparseMatrixPostfix = sparseMatrixPostfix, annotPostfix = annotPostfix, 
       individualsPostfix = individualsPostfix, labelsA = labelsA, pRange = pRange, 
       individuals = individuals, lowerBP = lowerBP, upperBP = upperBP, p = p, 
@@ -247,15 +262,13 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs, minIndivid = minIndivid, 
       avSNVsDist = avSNVsDist, SNVclusterLength = SNVclusterLength)
     
-    IBDsegmentList2excel(resHapFabia$mergedIBDsegmentList, paste(fileName, pRange, 
-      ".csv", sep = ""))
+    IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))
     
-    save(resHapFabia, annot, file = paste(fileName, pRange, "_resAnno", ".Rda", 
-      sep = ""))
+    save(resHapRFN, annot, file = paste0(fileName, pRange, "_resAnno", ".Rda"))
   }
 }
 
-hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
+hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
   annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", labelsA = NULL, 
   pRange = "", individuals = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, 
   quant = 0.01, eps = 1e-05, alpha = 0.03, cyc = 50, non_negative = 1, write_file = 0, 
@@ -293,7 +306,7 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   message("                      ")
   message("                      ")
-  message("Running hapFabia with:")
+  message("Running hapRFN with:")
   message("   Prefix string for file name of data files --------- : ", fileName)
   message("   Path of data files ---------------------------------: ", prefixPath)
   if (haplotypes) {
@@ -376,8 +389,7 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
     }
   }
   
-  ina <- as.numeric(readLines(paste(prefixPath, fileName, pRange, sparseMatrixPostfix, 
-    ".txt", sep = ""), n = 2))
+  ina <- as.numeric(readLines(paste0(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt"), n = 2))
   if (length(individuals) > 1) {
     individualsN <- length(individuals)
   } else {
@@ -414,10 +426,7 @@ hapFabiaNew <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   
   message("start RFN")
-  
-  # Fabia call res <-
-  # spfabia(X=paste(prefixPath,fileName,pRange,sparseMatrixPostfix,sep=''),p=p,alpha=alpha,cyc=cyc,non_negative=non_negative,write_file=write_file,norm=norm,lap=lap,samples=individuals,iter=iter,quant=quant,lowerB=lowerBindivid,upperB=upperBindivid,eps=eps)
-  
+    
   # RFN call
   l = ncol(X)
   n = nrow(X)

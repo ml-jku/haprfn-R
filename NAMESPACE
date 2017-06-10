@@ -1,8 +1,5 @@
-
-import(Rhtslib)
+import(Rhtslib, hapFabia)
 
 useDynLib(hapRFN)
 
-
-export(samplesPerFeature, readSamplesSpRfn, vcf2sparse)
-export("vcf2sparse")
+export(samplesPerFeature, readSamplesSpRfn, vcf2sparse, hapRFN)

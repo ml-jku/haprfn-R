@@ -351,7 +351,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   if (!info) {
     REprintf("Cannot write to info file!\n");
   } else {
-    fprintf("%zu\n%zu", nsamp, nsnp);
+    fprintf(info, "%zu\n%zu", nsamp, nsnp);
     fclose(info);
   }
 
