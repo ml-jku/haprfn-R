@@ -1,3 +1,11 @@
-RHTSLIB_LIBS=`echo 'Rhtslib::pkgconfig("PKG_LIBS")'|\
-        "${R_HOME}/bin/R" --vanilla --slave`
+RHTSLIB_PATH=\
+	`echo 'cat(system.file("lib", package="Rhtslib", mustWork=TRUE))'|\
+		"${R_HOME}/bin/R" --vanilla --slave`
+RHTSLIB_INC=\
+	`echo 'cat(system.file("include", package="Rhtslib"))'|\
+		"${R_HOME}/bin/R" --vanilla --slave`
+
+RHTSLIB_LIBS=-L$(RHTSLIB_PATH) -Wl,-rpath,$(RHTSLIB_PATH) -lhts -lz -pthread
+
+PKG_CPPFLAGS=-I$(RHTSLIB_INC)
 PKG_LIBS=$(RHTSLIB_LIBS)
