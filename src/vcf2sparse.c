@@ -43,7 +43,7 @@ void matrix_destroy(sparse_matrix_t* matrix) {
  ****/
 
 
-static const char AnnotationPostfix[] = "_annot";
+static const char AnnotationPostfix[] = "_annot.txt";
 static const char IndividualsPostfix[] = "_individuals.txt";
 static const char InfoPostfix[] = "_info.txt";
 static const char MatrixPostfix[] = "_mat.txt";
