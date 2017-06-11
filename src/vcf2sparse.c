@@ -306,7 +306,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     if (current_interval % interval_size == 0) {
       flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, file_name, prefix_path, lower_interval, lower_interval + interval_size);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, output_file, prefix_path, lower_interval, lower_interval + interval_size);
 
       tmpm = current_matrix;
       current_matrix = next_matrix;
@@ -319,7 +319,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       set_zerov(next_nnz, haplo, interval_size);
 
       if (annotate) {
-        write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + interval_size);
+        write_to_annotation_file(output_file, prefix_path, current_buffer->s, lower_interval, lower_interval + interval_size);
 
         tmps = current_buffer;
         current_buffer = next_buffer;
@@ -340,10 +340,10 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
 
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, current_interval, nsamp, file_name, prefix_path, lower_interval, lower_interval + current_interval);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, current_interval, nsamp, output_file, prefix_path, lower_interval, lower_interval + current_interval);
 
       if (annotate) {
-        write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
+        write_to_annotation_file(output_file, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
       }
   }
 
