@@ -212,6 +212,8 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     fprintf(individuals_file, "%d %s\n", i + 1, hdr->samples[i]);
   }
   fclose(individuals_file);
+	
+  Rprintf("Individuals: %zu\n", nsamp);
 
   // matrix[haplo * snp][sample]
   unsigned short **current_matrix = create_matrix(MAX_PLOIDY, interval_size, nsamp);
@@ -333,6 +335,10 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       next_interval = 0;
 
       n_interval++;
+    }
+
+    if (nsnp % 1000 == 0) {
+      Rprintf("Read SNV: %zu\r", nsnp);
     }
   }
 
