@@ -48,6 +48,7 @@ static const char IndividualsPostfix[] = "_individuals.txt";
 static const char InfoPostfix[] = "_info.txt";
 static const char MatrixPostfix[] = "_mat.txt";
 static const char VcfGzPostfix[] = ".vcf.gz";
+static const char VcfPostfix[] = ".vcf";
 static const size_t IgnoreInterval = -1;
 
 
@@ -183,15 +184,19 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   bcf_hdr_t *hdr = NULL;
   bcf1_t *bcf = NULL;
   FILE *individuals_file = NULL;
-  char *vcfgz_file_name;
+  char *vcfgz_file_name = NULL;
+  char *vcf_file_name = NULL;
 
 
   vcfgz_file_name = create_file_name(file_name, prefix_path, VcfGzPostfix, IgnoreInterval, IgnoreInterval);
-
-  // Open .vcf.gz file
   if (!(file = bcf_open(vcfgz_file_name, "r"))) {
-    REprintf("Cannot open file %s!\n", vcfgz_file_name);
-    goto cleanup;
+
+    vcf_file_name = create_file_name(file_name, prefix_path, VcfPostfix, IgnoreInterval, IgnoreInterval);
+    if (!(file = bcf_open(vcf_file_name, "r"))) {
+
+      REprintf("Cannot open any: \n\t%s\n\t%s\n", vcfgz_file_name, vcf_file_name);
+      goto cleanup;
+    }
   }
 
   // Read header file
@@ -361,6 +366,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
 cleanup:
   if (vcfgz_file_name) free(vcfgz_file_name);
+  if (vcf_file_name) free(vcf_file_name);
   if (bcf) bcf_destroy(bcf);
   if (hdr) bcf_hdr_destroy(hdr);
 }
