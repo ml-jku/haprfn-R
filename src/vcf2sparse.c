@@ -272,14 +272,18 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
           int allele_index = bcf_gt_allele(ptr[j]);
 
-          if (allele_index) {
-            // if allele_index > 1 warn and stop
+          if (allele_index > 1) {
+            REprintf("Multiallelic SNP found. Please split these sites into mutliple rows!\n");
+            REprintf("Aborting...\n");
+            goto cleanup;
+          }
 
-            
-            /**************
-             * Assumes that VCF has only one other variant
-             **************/
-            allele_index = 1;
+          if (allele_index < 0) {
+            REprintf("Negative allele index found!\n");
+            goto cleanup;
+          }
+
+          if (allele_index == 1) {
             size_t index = j * interval_size + current_interval;
             current_matrix[index][i] = allele_index;
             current_nnz[index]++;
