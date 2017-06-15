@@ -245,7 +245,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
   bcf = bcf_init();
 
-  size_t haplo = MAX_PLOIDY;
+  //size_t haplo = MAX_PLOIDY;
 
   kstring_t* buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
   kstring_t* current_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
@@ -271,23 +271,29 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
         goto cleanup;
       }
 
-      haplo = MIN(max_ploidy, haplo);
-
       for (size_t i = 0; i < nsamp; i++) {
         int32_t *ptr = gt_arr + i * max_ploidy;
-        for (size_t j = 0; j < haplo; j++) {
-          if (ptr[j] == bcf_int32_vector_end) {
-            haplo = j;
-            // sample has smaller ploidy
-            break;
-          }
+
+        for (size_t j = 0; j < MAX_PLOIDY; j++) {
+          
           if (bcf_gt_is_missing(ptr[j])) {
-            // missing allele
-            continue;
+            print_bcf_error(bcf, "Missing genotype found. Remove missing values from the genotype field.");
+            goto cleanup;
           }
 
-          int allele_index = bcf_gt_allele(ptr[j]);
+          int allele_index;
 
+          if (ptr[j] == bcf_int32_vector_end) {
+            if (j > 0) {
+              allele_index = current_matrix[current_interval][i * MAX_PLOIDY + (j - 1)];
+            } else {
+              print_bcf_error(bcf, "No genotype found.\n");
+              goto cleanup;
+            }
+          } else {
+            allele_index = bcf_gt_allele(ptr[j]);
+          }
+          
           if (allele_index > 1) {
             print_bcf_error(bcf, "Multiallelic SNP found. Please split these sites into mutliple rows.");
             goto cleanup;
