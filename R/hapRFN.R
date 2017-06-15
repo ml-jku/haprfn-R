@@ -43,7 +43,7 @@ readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #       4: calculate
 #       5: abort on missing value
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000, 
-                       annotation = TRUE, genotypes = FALSE, haplotypes = TRUE, missingValues = 0, 
+                       annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0, 
                        outputFile = NULL) {
   message("Running 'vcf2sparse' on ", fileName)
   message("   Path to file ----------------------- : ", prefixPath)
@@ -69,7 +69,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
   cyc = 50, non_negative = 1, write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50, 
   Lt = 0.1, Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03, 
   haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", 
-  minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100) {
+  minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE) {
 
   labelsA <- c()
   annot <- c()
@@ -271,7 +271,9 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs, minIndivid = minIndivid, 
       avSNVsDist = avSNVsDist, SNVclusterLength = SNVclusterLength)
     
-    IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))
+    if (saveAsCsv) {
+      IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))  
+    }
     
     save(resHapRFN, annot, file = paste0(fileName, pRange, "_resAnno", ".Rda"))
   }
