@@ -53,7 +53,7 @@ static const size_t IgnoreInterval = -1;
 
 
 // file_name must be released
-char *create_file_name(const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
+char* create_file_name(const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
   static char buffer[100];
   
   if (lower_interval == IgnoreInterval || upper_interval == IgnoreInterval) {
@@ -71,7 +71,7 @@ char *create_file_name(const char *file_name, const char *prefix, const char *po
   return fn;
 }
 
-FILE *open_file(const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
+FILE* open_file(const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
   char *fn = create_file_name(file_name, prefix, postfix, lower_interval, upper_interval);
   FILE *file = fopen(fn, "w");
   if (!file) {
@@ -172,6 +172,15 @@ void flip_matrix(unsigned short **matrix, unsigned int *nnz, const size_t nrow, 
   }
 }
 
+char* bcf_snp_id(bcf1_t *bcf) {
+  bcf_unpack(bcf, BCF_UN_STR);
+  return bcf->d.id;
+}
+
+void print_bcf_error(bcf1_t *bcf, const char *error_message) {
+  REprintf("Error (SNP ID: %s): %s\n", bcf_snp_id(bcf), error_message);
+}
+
 void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP genotypesS, SEXP haplotypesS, SEXP output_fileS) {
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
   const char *prefix_path = isNull(prefix_pathS) ? "" : CHAR(STRING_ELT(prefix_pathS, 0));
@@ -258,7 +267,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       int max_ploidy = ngt / nsamp;
 
       if (max_ploidy > MAX_PLOIDY) {
-        REprintf("Cannot handle poliploidy (in SNP number %zu)!\n", nsnp);
+        print_bcf_error(bcf, "Cannot handle poliploidy.");
         goto cleanup;
       }
 
@@ -280,13 +289,12 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
           int allele_index = bcf_gt_allele(ptr[j]);
 
           if (allele_index > 1) {
-            REprintf("Multiallelic SNP found. Please split these sites into mutliple rows!\n");
-            REprintf("Aborting...\n");
+            print_bcf_error(bcf, "Multiallelic SNP found. Please split these sites into mutliple rows.");
             goto cleanup;
           }
 
           if (allele_index < 0) {
-            REprintf("Negative allele index found!\n");
+            print_bcf_error(bcf, "Negative allele index found.");
             goto cleanup;
           }
 
