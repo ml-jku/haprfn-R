@@ -54,7 +54,8 @@ void matrix_destroy(sparse_matrix_t* matrix) {
 static const char AnnotationPostfix[] = "_annot.txt";
 static const char IndividualsPostfix[] = "_individuals.txt";
 static const char InfoPostfix[] = "_info.txt";
-static const char MatrixPostfix[] = "_mat.txt";
+static const char GenotypeMatrixPostfix[] = "_matG.txt";
+static const char HaplotypeMatrixPostfix[] = "_matH.txt";
 static const char VcfGzPostfix[] = ".vcf.gz";
 static const char VcfPostfix[] = ".vcf";
 static const size_t IgnoreInterval = -1;
@@ -154,9 +155,33 @@ void write_sparse_matrix(sparse_matrix_t *matrix, FILE *file) {
   }
 }
 
+// This method changes the variable matrix and nnz
+void haplotypes_to_genotypes(unsigned short **matrix, unsigned int *nnz, const size_t nrow, const size_t ncol) {
+  unsigned int *h = (unsigned int*) R_alloc(MAX_PLOIDY, sizeof(unsigned int));
+
+  for (size_t i = 0; i < nrow; i++) {
+    for (size_t j = 0; j < ncol / MAX_PLOIDY; j++) {
+      for (size_t p = 0; p < MAX_PLOIDY; p++) {
+        h[p] = matrix[i][j * MAX_PLOIDY + p];
+      }
+      // general solution makes it complicated
+      // only check the first two
+
+      if (h[0] == 0 && h[1] == 0) {
+        matrix[i][j] = 0;
+      } else if (h[0] == 1 && h[1] == 1) {
+        matrix[i][j] = 2;
+        nnz[i] -= 1;
+      } else {
+        matrix[i][j] = 1;
+      }
+    }
+  }
+}
+
 void write_dense_matrices_as_sparse(unsigned short **matrix, const unsigned int *nnz, const size_t nrow, const size_t ncol, 
-    const char *file_name, const char *prefix, const size_t lower_interval, const size_t upper_interval) {
-  FILE *file = open_file(file_name, prefix, MatrixPostfix, lower_interval, upper_interval);
+    const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
+  FILE *file = open_file(file_name, prefix, postfix, lower_interval, upper_interval);
   if (!file) {
     REprintf("Cannot write sparse matrix to file for interval %zd-%zd\n", lower_interval, upper_interval);
     return;
@@ -438,10 +463,11 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
       size_t lower_interval = n_interval * shift_size;
       if (haplotypes) {
-        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + interval_size);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, output_file, prefix_path, HaplotypeMatrixPostfix, lower_interval, lower_interval + interval_size);
       }
       if (genotypes) {
-
+        haplotypes_to_genotypes(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp, output_file, prefix_path, GenotypeMatrixPostfix, lower_interval, lower_interval + interval_size);
       }
 
       tmpm = current_matrix;
@@ -481,10 +507,11 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
       size_t lower_interval = n_interval * shift_size;
       if (haplotypes) {
-        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + current_interval);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, output_file, prefix_path, HaplotypeMatrixPostfix, lower_interval, lower_interval + current_interval);
       }
       if (genotypes) {
-        
+        haplotypes_to_genotypes(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp, output_file, prefix_path, GenotypeMatrixPostfix, lower_interval, lower_interval + current_interval);
       }
 
       if (annotate) {
