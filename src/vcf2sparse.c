@@ -266,6 +266,9 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
           int allele_index = bcf_gt_allele(ptr[j]);
 
           if (allele_index) {
+            // if allele_index > 1 warn and stop
+
+            
             /**************
              * Assumes that VCF has only one other variant
              **************/
