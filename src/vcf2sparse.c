@@ -8,6 +8,14 @@
 #define MAX_PLOIDY 2
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+typedef enum {
+  kDefault = 0,
+  kMajor = 1,
+  kMinor = 2,
+  kCalculate = 3,
+  kInfo = 4,
+  kAbort = 5
+} missing_t;
 /****
  * Sparse matrix structure
  ****/
@@ -177,11 +185,25 @@ char* bcf_snp_id(bcf1_t *bcf) {
   return bcf->d.id;
 }
 
-void print_bcf_error(bcf1_t *bcf, const char *error_message) {
-  REprintf("Error (SNP ID: %s): %s\n", bcf_snp_id(bcf), error_message);
+float bcf_allele_frequency(bcf_hdr_t *hdr, bcf1_t *bcf) {
+  float *value;
+  int n;
+  bcf_unpack(bcf, BCF_UN_INFO);
+  int retval = bcf_get_info_float(hdr, bcf, "AF", &value, &n);
+  
+  return retval >= 0 && n > 0 ? value[0] : -1.0;
 }
 
-void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP genotypesS, SEXP haplotypesS, SEXP output_fileS) {
+void print_bcf_error(bcf1_t *bcf, const char *error_message, const char *solution) {
+  REprintf("Error (SNP ID: %s)!\n", bcf_snp_id(bcf));
+  REprintf("\t%s\n", error_message);
+  if (solution != NULL) {
+    REprintf("\tSolution: %s\n");
+  }
+  REprintf("\tAborting.\n");
+}
+
+void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP genotypesS, SEXP haplotypesS, SEXP missing_valuesS, SEXP output_fileS) {
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
   const char *prefix_path = isNull(prefix_pathS) ? "" : CHAR(STRING_ELT(prefix_pathS, 0));
   const char *output_file = isNull(output_fileS) ? file_name : CHAR(STRING_ELT(output_fileS, 0));
@@ -190,6 +212,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   const Rboolean haplotypes = LOGICAL(haplotypesS)[0];
   const size_t interval_size = INTEGER(interval_sizeS)[0];
   const size_t shift_size = INTEGER(shift_sizeS)[0];
+  const missing_t missing_values = (missing_t) INTEGER(missing_valuesS)[0];
 
   htsFile *file = NULL;
   bcf_hdr_t *hdr = NULL;
@@ -243,9 +266,11 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   set_zerov(current_nnz, interval_size);
   set_zerov(next_nnz, interval_size);
 
-  bcf = bcf_init();
+  size_t *missing = (size_t*) R_alloc(nsamp * MAX_PLOIDY, sizeof(size_t));
+  memset(missing, 0, nsamp * MAX_PLOIDY * sizeof(size_t));
+  size_t missing_ind = 0;
 
-  //size_t haplo = MAX_PLOIDY;
+  bcf = bcf_init();
 
   kstring_t* buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
   kstring_t* current_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
@@ -267,7 +292,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       int max_ploidy = ngt / nsamp;
 
       if (max_ploidy > MAX_PLOIDY) {
-        print_bcf_error(bcf, "Cannot handle poliploidy.");
+        print_bcf_error(bcf, "Cannot handle poliploidy.", NULL);
         goto cleanup;
       }
 
@@ -275,32 +300,66 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
         int32_t *ptr = gt_arr + i * max_ploidy;
 
         for (size_t j = 0; j < MAX_PLOIDY; j++) {
+          int allele_index;
+          float frequency;
 
           if (bcf_gt_is_missing(ptr[j])) {
-            print_bcf_error(bcf, "Missing genotype found. Remove missing values from the genotype field.");
-            goto cleanup;
-          }
-
-          int allele_index;
-
-          if (ptr[j] == bcf_int32_vector_end) {
+            switch (missing_values) {
+              case kAbort:
+                print_bcf_error(bcf, "Missing genotype found.",
+                  "Try using the default value for the 'missingValues' parameter.");
+                goto cleanup;
+              case kMajor:
+                allele_index = 0;
+                break;
+              case kMinor:
+                allele_index = 1;
+                break;
+              case kDefault:
+              case kInfo:
+                frequency = bcf_allele_frequency(hdr, bcf);
+                if (missing_values == kInfo) {
+                  if (frequency < 0) {
+                    print_bcf_error(bcf, "Missing AF info field.",
+                      "Try using the default value for the 'missingValues' parameter.");
+                    goto cleanup;
+                  } else if (frequency > 1) {
+                    print_bcf_error(bcf, "AF info field contains frequency greater than one.", NULL);
+                    goto cleanup;
+                  }
+                } 
+                if (frequency >= 0 && frequency <= 1) {
+                  allele_index = frequency > 0.5 ? 1 : 0;
+                  break;
+                }
+                // fallthrough for kDefault
+              case kCalculate:
+                missing[missing_ind++] = i * MAX_PLOIDY + j;
+                // calculate
+                break;
+            }
+          } else if (ptr[j] == bcf_int32_vector_end) {
             if (j > 0) {
               allele_index = current_matrix[current_interval][i * MAX_PLOIDY + (j - 1)];
             } else {
-              print_bcf_error(bcf, "No genotype found.\n");
+              print_bcf_error(bcf, "No genotype found.\n", NULL);
               goto cleanup;
             }
           } else {
             allele_index = bcf_gt_allele(ptr[j]);
           }
 
+          if (missing_ind > 0) {
+            continue;
+          }
+
           if (allele_index > 1) {
-            print_bcf_error(bcf, "Multiallelic SNP found. Please split these sites into mutliple rows.");
+            print_bcf_error(bcf, "Multiallelic SNP found.", "Please split these sites into mutliple rows.");
             goto cleanup;
           }
 
           if (allele_index < 0) {
-            print_bcf_error(bcf, "Negative allele index found.");
+            print_bcf_error(bcf, "Negative allele index found.", NULL);
             goto cleanup;
           }
 
@@ -314,11 +373,23 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
               next_nnz[next_interval]++;
             }
           }
-        }
+        } // for all alleles
+      } // for all samples
+
+      if (missing_ind > 0) {
+        // estimate major allele
+        // current_nnz is # of minor alleles
+        float maf_frequency = current_nnz[current_interval] / (nsamp * MAX_PLOIDY - missing_ind);
+        int allele_index = maf_frequency > 
+        // use this allele_index
+        // update current_nnz
+        // update next_matrix if necessary
       }
+
     }
 
     if (annotate) {
+      // annotate add columns
       vcf_format(hdr, bcf, buffer, 1);
       kputsn(buffer->s, buffer->l, current_buffer);
 

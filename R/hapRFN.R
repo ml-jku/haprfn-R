@@ -35,9 +35,16 @@ readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 }
 
 
-
+## Missing values ->
+#       0: default: look for frequency defined in INFO as AF or calculate
+#       1: major allele
+#       2: minor allele
+#       3: look for AF field or abort
+#       4: calculate
+#       5: abort on missing value
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000, 
-                       annotation = TRUE, genotypes = FALSE, haplotypes = TRUE, outputFile = NULL) {
+                       annotation = TRUE, genotypes = FALSE, haplotypes = TRUE, missingValues = 0, 
+                       outputFile = NULL) {
   message("Running 'vcf2sparse' on ", fileName)
   message("   Path to file ----------------------- : ", prefixPath)
   if (!is.null(outputFile)) {
@@ -46,7 +53,8 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
     message("   Output file prefix given by input ----")
   }
 
-  .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize), annotation, genotypes, haplotypes, outputFile, 
+  .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize),
+        annotation, genotypes, haplotypes, as.integer(missingValues), outputFile, 
         PACKAGE = "hapRFN")
 
   message("")
