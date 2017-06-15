@@ -221,6 +221,12 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   char *vcfgz_file_name = NULL;
   char *vcf_file_name = NULL;
 
+  kstring_t* buffer = NULL;
+  kstring_t* freq_flip_col = NULL;
+  kstring_t* current_buffer = NULL;
+  kstring_t* next_buffer = NULL;
+  kstring_t* tmps;
+
 
   vcfgz_file_name = create_file_name(file_name, prefix_path, VcfGzPostfix, IgnoreInterval, IgnoreInterval);
   if (!(file = bcf_open(vcfgz_file_name, "r"))) {
@@ -272,10 +278,10 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
   bcf = bcf_init();
 
-  kstring_t* buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
-  kstring_t* current_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
-  kstring_t* next_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
-  kstring_t* tmps;
+  buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
+  freq_flip_col = (kstring_t*) calloc(1, sizeof(kstring_t));
+  current_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
+  next_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
 
   size_t current_interval = 0;
   size_t next_interval = 0;
@@ -381,7 +387,8 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       if (missing_ind > 0) {
         // estimate major allele
         // current_nnz is # of minor alleles
-        float maf = current_nnz[current_interval] / (nsamp * MAX_PLOIDY - missing_ind);
+
+        float maf = ((float) current_nnz[current_interval]) / (nsamp * MAX_PLOIDY - missing_ind);
         if (maf > 0.5) {
           for (size_t i = 0; i < missing_ind; i++) {
             current_matrix[current_interval][missing[i]] = 1;
@@ -402,6 +409,11 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     if (annotate) {
       // annotate add columns
       vcf_format(hdr, bcf, buffer, 1);
+      buffer->l = buffer->l - 1;
+      float frequency = ((float) current_nnz[current_interval]) / (nsamp * MAX_PLOIDY);
+      ksprintf(freq_flip_col, "\t%.8f\t%d\n", frequency, frequency > 0.5);
+      kputsn(freq_flip_col->s, freq_flip_col->l, buffer);
+
       kputsn(buffer->s, buffer->l, current_buffer);
 
       if (current_interval >= shift_size) {
@@ -410,6 +422,9 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
       buffer->s[0] = 0;
       buffer->l = 0;
+
+      freq_flip_col->s[0] = 0;
+      freq_flip_col->l = 0;
     } // annotate
 
     if (current_interval >= shift_size) {
@@ -477,6 +492,10 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
 
 cleanup:
+  if (buffer) free(buffer);
+  if (freq_flip_col) free(freq_flip_col);
+  if (current_buffer) free(current_buffer);
+  if (next_buffer) free(next_buffer);
   if (vcfgz_file_name) free(vcfgz_file_name);
   if (vcf_file_name) free(vcf_file_name);
   if (bcf) bcf_destroy(bcf);
