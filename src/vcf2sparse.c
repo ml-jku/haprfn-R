@@ -43,7 +43,7 @@ void matrix_destroy(sparse_matrix_t* matrix) {
  ****/
 
 
-static const char AnnotationPostfix[] = "_annot";
+static const char AnnotationPostfix[] = "_annot.txt";
 static const char IndividualsPostfix[] = "_individuals.txt";
 static const char InfoPostfix[] = "_info.txt";
 static const char MatrixPostfix[] = "_mat.txt";
@@ -219,6 +219,8 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     fprintf(individuals_file, "%d %s\n", i + 1, hdr->samples[i]);
   }
   fclose(individuals_file);
+	
+  Rprintf("Individuals: %zu\n", nsamp);
 
   // matrix[haplo * snp][sample]
   unsigned short **current_matrix = create_matrix(interval_size, nsamp * MAX_PLOIDY);
@@ -319,7 +321,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     if (current_interval % interval_size == 0) {
       flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, file_name, prefix_path, lower_interval, lower_interval + interval_size);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + interval_size);
 
       tmpm = current_matrix;
       current_matrix = next_matrix;
@@ -332,7 +334,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       set_zerov(next_nnz, interval_size);
 
       if (annotate) {
-        write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + interval_size);
+        write_to_annotation_file(output_file, prefix_path, current_buffer->s, lower_interval, lower_interval + interval_size);
 
         tmps = current_buffer;
         current_buffer = next_buffer;
@@ -347,16 +349,20 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
       n_interval++;
     }
+
+    if (nsnp % 1000 == 0) {
+      Rprintf("Read SNV: %zu\r", nsnp);
+    }
   }
 
   if (current_interval > 0) {
       flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
 
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, file_name, prefix_path, lower_interval, lower_interval + current_interval);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + current_interval);
 
       if (annotate) {
-        write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
+        write_to_annotation_file(output_file, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
       }
   }
 
