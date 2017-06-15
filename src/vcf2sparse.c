@@ -275,7 +275,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
         int32_t *ptr = gt_arr + i * max_ploidy;
 
         for (size_t j = 0; j < MAX_PLOIDY; j++) {
-          
+
           if (bcf_gt_is_missing(ptr[j])) {
             print_bcf_error(bcf, "Missing genotype found. Remove missing values from the genotype field.");
             goto cleanup;
@@ -293,7 +293,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
           } else {
             allele_index = bcf_gt_allele(ptr[j]);
           }
-          
+
           if (allele_index > 1) {
             print_bcf_error(bcf, "Multiallelic SNP found. Please split these sites into mutliple rows.");
             goto cleanup;
@@ -308,7 +308,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
             size_t sample_haplo_index = i * MAX_PLOIDY + j;
             current_matrix[current_interval][sample_haplo_index] = allele_index;
             current_nnz[current_interval]++;
-          
+
             if (current_interval >= shift_size) {
               next_matrix[next_interval][sample_haplo_index] = allele_index;
               next_nnz[next_interval]++;
