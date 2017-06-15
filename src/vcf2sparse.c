@@ -222,7 +222,6 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 	
   Rprintf("Individuals: %zu\n", nsamp);
 
-  // matrix[haplo * snp][sample]
   unsigned short **current_matrix = create_matrix(interval_size, nsamp * MAX_PLOIDY);
   unsigned short **next_matrix = create_matrix(interval_size, nsamp * MAX_PLOIDY);
   unsigned short **tmpm;
@@ -257,6 +256,12 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
     if (ngt > 0) {
       int max_ploidy = ngt / nsamp;
+
+      if (max_ploidy > MAX_PLOIDY) {
+        REprintf("Cannot handle poliploidy (in SNP number %zu)!\n", nsnp);
+        goto cleanup;
+      }
+
       haplo = MIN(max_ploidy, haplo);
 
       for (size_t i = 0; i < nsamp; i++) {
