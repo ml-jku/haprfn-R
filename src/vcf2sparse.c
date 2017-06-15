@@ -225,7 +225,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   unsigned short **next_matrix = create_matrix(interval_size, nsamp * MAX_PLOIDY);
   unsigned short **tmpm;
   set_zerom(current_matrix, interval_size, nsamp * MAX_PLOIDY);
-  set_zerom(next_matrix, MAX_PLOIDY, interval_size, nsamp * MAX_PLOIDY);
+  set_zerom(next_matrix, interval_size, nsamp * MAX_PLOIDY);
 
   unsigned int *current_nnz = (unsigned int*) R_alloc(interval_size, sizeof(unsigned int));
   unsigned int *next_nnz = (unsigned int*) R_alloc(interval_size, sizeof(unsigned int));
@@ -285,7 +285,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
           if (allele_index == 1) {
             size_t sample_haplo_index = i * MAX_PLOIDY + j;
-            current_matrix[current_interval][sample_haplo_index] = allele_index
+            current_matrix[current_interval][sample_haplo_index] = allele_index;
             current_nnz[current_interval]++;
           
             if (current_interval >= shift_size) {

@@ -6,7 +6,7 @@
 R_CallMethodDef callMethods[] = {
   {"readSamplesSpRfn", (DL_FUNC) &readSamplesSpRfn, 4},
   {"samplesPerFeature", (DL_FUNC) &samplesPerFeature, 4},
-  {"vcf2sparse", (DL_FUNC) &vcf2sparse, 6},
+  {"vcf2sparse", (DL_FUNC) &vcf2sparse, 8},
   {NULL, NULL, 0}
 };
 

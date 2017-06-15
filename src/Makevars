@@ -1,11 +1,13 @@
 RHTSLIB_PATH=\
-	`echo 'cat(system.file("lib", package="Rhtslib", mustWork=TRUE))'|\
-		"${R_HOME}/bin/R" --vanilla --slave`
-RHTSLIB_INC=\
-	`echo 'cat(system.file("include", package="Rhtslib"))'|\
-		"${R_HOME}/bin/R" --vanilla --slave`
+	`echo "p<-system.file('lib',package='Rhtslib',mustWork=TRUE);cat(switch(Sys.info()['sysname'],Linux={sprintf('-L%s -Wl,-rpath,%s -lhts -lz -pthread',p,p)},Darwin={sprintf('%s/libhts.a -lz -pthread',p)}))" | R --vanilla --slave`
+#	`echo 'cat(system.file("lib", package="Rhtslib", mustWork=TRUE))'|\
+#		"${R_HOME}/bin/R" --vanilla --slave`
 
-RHTSLIB_LIBS=-L$(RHTSLIB_PATH) -Wl,-rpath,$(RHTSLIB_PATH) -lhts -lz -pthread
+#RHTSLIB_INC=\
+#	`echo 'cat(system.file("include", package="Rhtslib"))'|\
+#		"${R_HOME}/bin/R" --vanilla --slave`
 
-PKG_CPPFLAGS=-I$(RHTSLIB_INC)
-PKG_LIBS=$(RHTSLIB_LIBS)
+#RHTSLIB_LIBS=-L$(RHTSLIB_PATH) -Wl,-rpath,$(RHTSLIB_PATH) -lhts -lz -pthread
+
+# PKG_CPPFLAGS=-I$(RHTSLIB_INC)
+PKG_LIBS=$(RHTSLIB_PATH)
