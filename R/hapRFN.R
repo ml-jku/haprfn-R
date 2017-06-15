@@ -112,7 +112,6 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       indit <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", as.is = TRUE)
       lind <- length(indit)
 
-      # Why would there be less than 4 columns? (All columns are mandatory)
       if (lind < 4) {
         inditA <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", as.is = TRUE)
         if (length(inditA) > lind) {
@@ -417,12 +416,19 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   filename1 <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt")
   
   filenamelist <- list(filename1)
+
+  # SKIP THESE
+  # Crea
   
   # What is this?
+  # 
   res1 <- readsparsematrixlist(filenamelist)
   
   # What is this?
   X <- fillmat2(res1)
+
+  # Create X DgC Matrix 
+
   
   
   message("start RFN")
