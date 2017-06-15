@@ -198,7 +198,7 @@ void print_bcf_error(bcf1_t *bcf, const char *error_message, const char *solutio
   REprintf("Error (SNP ID: %s)!\n", bcf_snp_id(bcf));
   REprintf("\t%s\n", error_message);
   if (solution != NULL) {
-    REprintf("\tSolution: %s\n");
+    REprintf("\tSolution: %s\n", solution);
   }
   REprintf("\tAborting.\n");
 }
@@ -339,7 +339,9 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
                 break;
             }
           } else if (ptr[j] == bcf_int32_vector_end) {
-            if (j > 0) {
+            if (j > 0 && missing_ind > 0 && missing[missing_ind - 1] == i * MAX_PLOIDY + (j - 1)) {
+              missing[missing_ind++] = i * MAX_PLOIDY + j;
+            } else if (j > 0) {
               allele_index = current_matrix[current_interval][i * MAX_PLOIDY + (j - 1)];
             } else {
               print_bcf_error(bcf, "No genotype found.\n", NULL);
@@ -349,7 +351,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
             allele_index = bcf_gt_allele(ptr[j]);
           }
 
-          if (missing_ind > 0) {
+          if (missing_ind > 0 && missing[missing_ind - 1] == i * MAX_PLOIDY + j) {
             continue;
           }
 
@@ -379,13 +381,22 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       if (missing_ind > 0) {
         // estimate major allele
         // current_nnz is # of minor alleles
-        float maf_frequency = current_nnz[current_interval] / (nsamp * MAX_PLOIDY - missing_ind);
-        int allele_index = maf_frequency > 
-        // use this allele_index
-        // update current_nnz
-        // update next_matrix if necessary
+        float maf = current_nnz[current_interval] / (nsamp * MAX_PLOIDY - missing_ind);
+        if (maf > 0.5) {
+          for (size_t i = 0; i < missing_ind; i++) {
+            current_matrix[current_interval][missing[i]] = 1;
+            if (current_interval >= shift_size) {
+              next_matrix[next_interval][missing[i]] = 1;
+            }
+          }
+          current_nnz[current_interval] += missing_ind;
+          if (current_interval >= shift_size) {
+            next_nnz[next_interval] += missing_ind;
+          }
+        }
       }
 
+      missing_ind = 0;
     }
 
     if (annotate) {
