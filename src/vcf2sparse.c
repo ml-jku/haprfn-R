@@ -172,11 +172,13 @@ void flip_matrix(unsigned short **matrix, unsigned int *nnz, const size_t multip
   }
 }
 
-void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP output_fileS) {
+void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP genotypesS, SEXP haplotypesS, SEXP output_fileS) {
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
   const char *prefix_path = isNull(prefix_pathS) ? "" : CHAR(STRING_ELT(prefix_pathS, 0));
   const char *output_file = isNull(output_fileS) ? file_name : CHAR(STRING_ELT(output_fileS, 0));
   const Rboolean annotate = LOGICAL(annotateS)[0];
+  const Rboolean genotypes = LOGICAL(genotypesS)[0];
+  const Rboolean haplotypes = LOGICAL(haplotypesS)[0];
   const size_t interval_size = INTEGER(interval_sizeS)[0];
   const size_t shift_size = INTEGER(shift_sizeS)[0];
 

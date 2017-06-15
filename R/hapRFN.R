@@ -34,8 +34,10 @@ readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   return(res)
 }
 
+
+
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000, 
-                       annotation = TRUE, outputFile = NULL) {
+                       annotation = TRUE, genotypes = FALSE, haplotypes = TRUE, outputFile = NULL) {
   message("Running 'vcf2sparse' on ", fileName)
   message("   Path to file ----------------------- : ", prefixPath)
   if (!is.null(outputFile)) {
@@ -44,7 +46,7 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
     message("   Output file prefix given by input ----")
   }
 
-  .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize), annotation, outputFile, 
+  .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize), annotation, genotypes, haplotypes, outputFile, 
         PACKAGE = "hapRFN")
 
   message("")
