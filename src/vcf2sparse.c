@@ -117,7 +117,7 @@ void set_zerov(unsigned int *vector, const size_t nrow) {
   memset(vector, 0, nrow * sizeof(unsigned int));
 }
 
-sparse_matrix_t* dense_to_sparse(unsigned short **de_matrix, unsigned int *nnz, const size_t nrow, const size_t ncol) {
+sparse_matrix_t* dense_to_sparse(unsigned short **de_matrix, const unsigned int *nnz, const size_t nrow, const size_t ncol) {
   unsigned int nonzero = 0;
   for (size_t i = 0; i < nrow; i++) {
     nonzero += nnz[i];
@@ -154,7 +154,7 @@ void write_sparse_matrix(sparse_matrix_t *matrix, FILE *file) {
   }
 }
 
-void write_dense_matrices_as_sparse(unsigned short **matrix, unsigned int *nnz, const size_t nrow, const size_t ncol, 
+void write_dense_matrices_as_sparse(unsigned short **matrix, const unsigned int *nnz, const size_t nrow, const size_t ncol, 
     const char *file_name, const char *prefix, const size_t lower_interval, const size_t upper_interval) {
   FILE *file = open_file(file_name, prefix, MatrixPostfix, lower_interval, upper_interval);
   if (!file) {
@@ -437,7 +437,12 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     if (current_interval % interval_size == 0) {
       flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + interval_size);
+      if (haplotypes) {
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + interval_size);
+      }
+      if (genotypes) {
+
+      }
 
       tmpm = current_matrix;
       current_matrix = next_matrix;
@@ -475,7 +480,12 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
 
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + current_interval);
+      if (haplotypes) {
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, output_file, prefix_path, lower_interval, lower_interval + current_interval);
+      }
+      if (genotypes) {
+        
+      }
 
       if (annotate) {
         write_to_annotation_file(output_file, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
