@@ -91,22 +91,22 @@ void write_to_annotation_file(const char *file_name, const char *prefix, const c
   fclose(file);
 }
 
-unsigned short** create_matrix(const size_t multiple, const size_t nrow, const size_t ncol) {
-  unsigned short** matrix = (unsigned short**) R_alloc(multiple * nrow, sizeof(unsigned short*));
-  for (size_t i = 0; i < nrow * multiple; i++) {
+unsigned short** create_matrix(const size_t nrow, const size_t ncol) {
+  unsigned short** matrix = (unsigned short**) R_alloc(nrow, sizeof(unsigned short*));
+  for (size_t i = 0; i < nrow; i++) {
     matrix[i] = (unsigned short*) R_alloc(ncol, sizeof(unsigned short));
   }
   return matrix;
 }
 
-void set_zerom(unsigned short **matrix, const size_t multiple, const size_t nrow, const size_t ncol) {
-  for (size_t i = 0; i < nrow * multiple; i++) {
+void set_zerom(unsigned short **matrix, const size_t nrow, const size_t ncol) {
+  for (size_t i = 0; i < nrow; i++) {
     memset(matrix[i], 0, ncol * sizeof(unsigned short));
   }
 }
 
-void set_zerov(unsigned int *vector, const size_t multiple, const size_t nrow) {
-  memset(vector, 0, nrow * multiple * sizeof(unsigned int));
+void set_zerov(unsigned int *vector, const size_t nrow) {
+  memset(vector, 0, nrow * sizeof(unsigned int));
 }
 
 sparse_matrix_t* dense_to_sparse(unsigned short **de_matrix, unsigned int *nnz, const size_t nrow, const size_t ncol) {
@@ -146,23 +146,23 @@ void write_sparse_matrix(sparse_matrix_t *matrix, FILE *file) {
   }
 }
 
-void write_dense_matrices_as_sparse(unsigned short **matrix, unsigned int *nnz, const size_t multiple, const size_t nrow, 
-    const size_t ncol, const char *file_name, const char *prefix, const size_t lower_interval, const size_t upper_interval) {
+void write_dense_matrices_as_sparse(unsigned short **matrix, unsigned int *nnz, const size_t nrow, const size_t ncol, 
+    const char *file_name, const char *prefix, const size_t lower_interval, const size_t upper_interval) {
   FILE *file = open_file(file_name, prefix, MatrixPostfix, lower_interval, upper_interval);
   if (!file) {
     REprintf("Cannot write sparse matrix to file for interval %zd-%zd\n", lower_interval, upper_interval);
     return;
   }
   
-  sparse_matrix_t *sp_matrix = dense_to_sparse(matrix, nnz, multiple * nrow, ncol);
+  sparse_matrix_t *sp_matrix = dense_to_sparse(matrix, nnz, nrow, ncol);
   write_sparse_matrix(sp_matrix, file);
 
   matrix_destroy(sp_matrix);
   fclose(file);
 }
 
-void flip_matrix(unsigned short **matrix, unsigned int *nnz, const size_t multiple, const size_t nrow, const size_t ncol) {
-  for (size_t i = 0; i < multiple * nrow; i++) {
+void flip_matrix(unsigned short **matrix, unsigned int *nnz, const size_t nrow, const size_t ncol) {
+  for (size_t i = 0; i < nrow; i++) {
     if (ncol / 2 < nnz[i]) {
       nnz[i] = ncol - nnz[i];
       for (size_t j = 0; j < ncol; j++) {
@@ -221,17 +221,17 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   fclose(individuals_file);
 
   // matrix[haplo * snp][sample]
-  unsigned short **current_matrix = create_matrix(MAX_PLOIDY, interval_size, nsamp);
-  unsigned short **next_matrix = create_matrix(MAX_PLOIDY, interval_size, nsamp);
+  unsigned short **current_matrix = create_matrix(interval_size, nsamp * MAX_PLOIDY);
+  unsigned short **next_matrix = create_matrix(interval_size, nsamp * MAX_PLOIDY);
   unsigned short **tmpm;
-  set_zerom(current_matrix, MAX_PLOIDY, interval_size, nsamp);
-  set_zerom(next_matrix, MAX_PLOIDY, interval_size, nsamp);
+  set_zerom(current_matrix, interval_size, nsamp * MAX_PLOIDY);
+  set_zerom(next_matrix, MAX_PLOIDY, interval_size, nsamp * MAX_PLOIDY);
 
-  unsigned int *current_nnz = (unsigned int*) R_alloc(MAX_PLOIDY * interval_size, sizeof(unsigned int));
-  unsigned int *next_nnz = (unsigned int*) R_alloc(MAX_PLOIDY * interval_size, sizeof(unsigned int));
+  unsigned int *current_nnz = (unsigned int*) R_alloc(interval_size, sizeof(unsigned int));
+  unsigned int *next_nnz = (unsigned int*) R_alloc(interval_size, sizeof(unsigned int));
   unsigned int *tmpv;
-  set_zerov(current_nnz, MAX_PLOIDY, interval_size);
-  set_zerov(next_nnz, MAX_PLOIDY, interval_size);
+  set_zerov(current_nnz, interval_size);
+  set_zerov(next_nnz, interval_size);
 
   bcf = bcf_init();
 
@@ -284,14 +284,13 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
           }
 
           if (allele_index == 1) {
-            size_t index = j * interval_size + current_interval;
-            current_matrix[index][i] = allele_index;
-            current_nnz[index]++;
+            size_t sample_haplo_index = i * MAX_PLOIDY + j;
+            current_matrix[current_interval][sample_haplo_index] = allele_index
+            current_nnz[current_interval]++;
           
             if (current_interval >= shift_size) {
-              size_t row = j * interval_size + next_interval;
-              next_matrix[row][i] = allele_index;
-              next_nnz[row]++;
+              next_matrix[next_interval][sample_haplo_index] = allele_index;
+              next_nnz[next_interval]++;
             }
           }
         }
@@ -318,19 +317,19 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
     // start a new interval
     if (current_interval % interval_size == 0) {
-      flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
+      flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, interval_size, nsamp, file_name, prefix_path, lower_interval, lower_interval + interval_size);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, file_name, prefix_path, lower_interval, lower_interval + interval_size);
 
       tmpm = current_matrix;
       current_matrix = next_matrix;
       next_matrix = tmpm;
-      set_zerom(next_matrix, haplo, interval_size, nsamp);
+      set_zerom(next_matrix, interval_size, nsamp * MAX_PLOIDY);
 
       tmpv = current_nnz;
       current_nnz = next_nnz;
       next_nnz = tmpv;
-      set_zerov(next_nnz, haplo, interval_size);
+      set_zerov(next_nnz, interval_size);
 
       if (annotate) {
         write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + interval_size);
@@ -351,10 +350,10 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   }
 
   if (current_interval > 0) {
-      flip_matrix(current_matrix, current_nnz, haplo, interval_size, nsamp);
+      flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
 
       size_t lower_interval = n_interval * shift_size;
-      write_dense_matrices_as_sparse(current_matrix, current_nnz, haplo, current_interval, nsamp, file_name, prefix_path, lower_interval, lower_interval + current_interval);
+      write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, file_name, prefix_path, lower_interval, lower_interval + current_interval);
 
       if (annotate) {
         write_to_annotation_file(file_name, prefix_path, current_buffer->s, lower_interval, lower_interval + current_interval);  
