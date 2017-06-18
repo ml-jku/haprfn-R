@@ -1,4 +1,4 @@
-import(Rhtslib, RFN, hapFabia)
+import(Rhtslib, hapFabia, RFN)
 
 useDynLib(hapRFN)
 
