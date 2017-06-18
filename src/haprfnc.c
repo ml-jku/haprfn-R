@@ -1,10 +1,11 @@
 #include <Rinternals.h>
+#include <R_ext/Error.h>
 #include <stdlib.h>
 #include "interface.h"
 
 #define GET_MACRO(_1,_2,_3,_4,NAME,...) NAME
 
-#define _ERROR(file, str) fclose(file); REprintf(str); return -1;
+#define _ERROR(file, str) fclose(file); Rf_error(str); return -1;
 
 #define READ(...) GET_MACRO(__VA_ARGS__, READ4, READ3)(__VA_ARGS__)
 #define READ4(from, template, variable, str) \
@@ -201,7 +202,7 @@ int read_samples_and_calculate_col_sums(const char *file_name, size_t **row_ptr,
   FILE* file = fopen(file_name, "r");
 
   if (file == NULL) {
-    REprintf("File %s not found!\n", file_name);
+    Rf_error("File %s not found!\n", file_name);
     return -1;
   }
 
