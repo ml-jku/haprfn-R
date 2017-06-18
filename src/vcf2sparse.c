@@ -16,6 +16,8 @@ typedef enum {
   kInfo = 4,
   kAbort = 5
 } missing_t;
+
+
 /****
  * Sparse matrix structure
  ****/
