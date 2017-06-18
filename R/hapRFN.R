@@ -1,12 +1,17 @@
 samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
-    stop("Data file name missing. Stopped.")
+    stop("Data file name missing.")
   }
   
   X <- as.character(X)
   samples <- as.integer(sort.int(as.integer(unique(samples))))
   lowerB <- as.double(lowerB)
   upperB <- as.double(upperB)
+  
+  if (lowerB > upperB) {
+    warning(paste0("Lower bound (", lowerB, 
+                   ") is greater than the upper bound (", upperB,")."))
+  }
   
   .Call("samplesPerFeature", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
