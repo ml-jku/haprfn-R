@@ -40,7 +40,7 @@ int read_all_samples_and_calculate_col_sums(FILE *file, size_t *row_ptr, size_t 
   }
 
   // read column indices
-  size_t max_col = -1;
+  size_t max_col = 0;
   for (size_t i = 0; i < nnz; i++) {
     READ(file, "%zu", (col_ind + i));
     if (col_ind[i] >= max_col) {
