@@ -204,10 +204,10 @@ int read_samples_and_calculate_col_sums(const char *file_name, size_t **row_ptr,
   }
 
   READ(file, "%zu\n", nrow);
-  CHECK(nrow > 0, file);
+  CHECK(*nrow >= 0, file);
 
   READ(file, "%zu\n", nnz);
-  CHECK(nnz > 0, file);
+  CHECK(*nnz >= 0, file);
 
   *row_ptr = (size_t*) R_alloc(*nrow + 1, sizeof(size_t));
   *col_ind = (size_t*) R_alloc(*nnz, sizeof(size_t));
