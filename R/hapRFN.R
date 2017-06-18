@@ -3,17 +3,12 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
     stop("Data file name missing. Stopped.")
   }
   
+  X <- as.character(X)
   samples <- as.integer(sort.int(as.integer(unique(samples))))
   lowerB <- as.double(lowerB)
   upperB <- as.double(upperB)
   
-  res <- .Call("samplesPerFeature", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
-  
-  # TODO: Return nil value on error, or a standard empty?
-  
-  # if (is.null(res)) { return list(sL = list(), nsL = 0) }
-  
-  return(res)
+  .Call("samplesPerFeature", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
 readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
@@ -21,17 +16,12 @@ readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
     stop("Data file name missing. Stopped.")
   }
   
+  X <- as.character(X)
   samples <- as.integer(sort.int(as.integer(unique(samples))))
   lowerB <- as.double(lowerB)
   upperB <- as.double(upperB)
   
-  res <- .Call("readSamplesSpRfn", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
-  
-  # TODO: Return nil value on error, or a standard empty?
-  
-  # if (is.null(res)) { return list(X = as.matrix(1)) }
-  
-  return(res)
+  .Call("readSamplesSpRfn", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
 
