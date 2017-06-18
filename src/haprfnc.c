@@ -41,14 +41,13 @@ int read_all_samples_and_calculate_col_sums(FILE *file, size_t *row_ptr, size_t 
   }
 
   // read column indices
-  size_t max_col = 0;
+  *ncol = 0;
   for (size_t i = 0; i < nnz; i++) {
     READ(file, "%zu", (col_ind + i));
-    if (col_ind[i] >= max_col) {
-      max_col = col_ind[i];
+    if (col_ind[i] >= *ncol) {
+      *ncol = col_ind[i] + 1;
     }
   }
-  *ncol = max_col + 1;
 
   *col_sums = (double*) R_alloc(*ncol, sizeof(double));
   set_memory_double(*col_sums, 0.0, *ncol);
@@ -82,7 +81,6 @@ int read_filtered_samples_and_calculate_col_sums(FILE *file, size_t **row_ptr, s
   }
 
   size_t cur_row = 0;
-  size_t max_col = -1;
   cur_samp = 0;
   
   size_t int_trash;
@@ -90,6 +88,7 @@ int read_filtered_samples_and_calculate_col_sums(FILE *file, size_t **row_ptr, s
 
   size_t it = 0;
   size_t cur_val = 0;
+  *ncol = 0;
 
   // read column indices
   while (cur_samp < nsamp) {
@@ -121,8 +120,8 @@ int read_filtered_samples_and_calculate_col_sums(FILE *file, size_t **row_ptr, s
     // here samples[cur_samp] - 1 == cur_row
     while (it < (*row_ptr)[cur_row + 1]) {
       READ(file, "%zu", (col_ind + cur_val));
-      if (max_col < col_ind[cur_val]) {
-        max_col = col_ind[cur_val];
+      if (*ncol <= col_ind[cur_val]) {
+        *ncol = col_ind[cur_val] + 1;
       }
       it++;
       cur_val++;
@@ -134,12 +133,10 @@ int read_filtered_samples_and_calculate_col_sums(FILE *file, size_t **row_ptr, s
   // read rest
   for (; it < *nnz; it++) {
     READ(file, "%zu", &int_trash);
-    if (max_col < int_trash) {
-        max_col = int_trash;
+    if (*ncol <= int_trash) {
+        *ncol = int_trash + 1;
     }
   }
-
-  *ncol = max_col + 1;
 
   *col_sums = (double*) R_alloc(*ncol, sizeof(double));
   set_memory_double(*col_sums, 0.0, *ncol);
