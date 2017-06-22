@@ -1,1 +1,1 @@
-context("readSamplesSpRfn")
+context("readSparseSamples")

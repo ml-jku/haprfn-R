@@ -37,6 +37,12 @@ generateMatrix <- function(n, m, sp, sd = 1) {
   mat
 }
 
+generateSamples <- function(nsamp, number) {
+  set.seed(123456)
+  
+  sample(1:(nsamp), number)
+}
+
 
 matrixToCSR <- function(x, fname) {
   sp <- Matrix(t(x), sparse = TRUE)
@@ -85,8 +91,10 @@ generateResultsFile <- function(n, m, sp = 0.9, sd = 1, basePath = "./") {
   removeMatrixFiles(fileNames)
 }
 
+
+
 generateResultsFileReadSamplesSpRfn <- function(n, m, sp = 0.9, sd = 1, basePath = "./") {
-  fileNames <- writeMatrixFiles(n, m, sp, sd, basePath, "readSamplesSpRfn")
+  fileNames <- writeMatrixFiles(n, m, sp, sd, basePath, "readSparseSamples")
   
   require(fabia)
   
@@ -102,7 +110,7 @@ generateResultsFileReadSamplesSpRfn <- function(n, m, sp = 0.9, sd = 1, basePath
 #generateResultsFile(100, 200, 0.8, 40)
 #generateResultsFile(100, 200, 0.1, 100)
 
-generateResultsFileReadSamplesSpRfn(10, 10, 0.9, 1)
+#generateResultsFileReadSparseSamples(10, 10, 0.9, 1)
 #generateResultsFile(1000, 1000, 0.9, 1)
 #generateResultsFile(100, 200, 0.8, 40)
 #generateResultsFile(100, 200, 0.1, 100)
