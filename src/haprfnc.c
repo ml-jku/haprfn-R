@@ -208,6 +208,17 @@ int read_samples_and_calculate_col_sums(const char *file_name, size_t **row_ptr,
 
   READ(file, "%zu\n", nnz);
   CHECK(*nnz >= 0, file);
+  if (*nrow == 0 && *nnz > 0) {
+    Rf_error("Cannot zero rows and multiple nnz values.");
+    return -1;
+  } 
+  if (*nrow == 0) {
+    Rf_warning("Reading matrix with zero rows.");
+  }
+  if (*nnz == 0) {
+    Rf_warning("Reading null matrix.");
+  }
+
 
   *row_ptr = (size_t*) R_alloc(*nrow + 1, sizeof(size_t));
   *col_ind = (size_t*) R_alloc(*nnz, sizeof(size_t));
