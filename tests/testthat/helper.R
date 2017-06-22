@@ -1,10 +1,10 @@
 library(Matrix)
 set.seed(123456)
 
-writeMatrixFiles <- function(n, m, sp = 0.9, sd = 1, basePath = "./") {
+writeMatrixFiles <- function(n, m, sp = 0.9, sd = 1, basePath = "./", baseName = "samplesPerFeature") {
   mat <- generateMatrix(n, m, sp, sd)
   
-  fileNames <- paste0(basePath,"samplesPerFeature_", c("csr", "fabia", "expected"), "_", n, "_", m, "_", format(sp, digits = 2), "_", format(sd, digits = 2), ".txt")
+  fileNames <- paste0(basePath,baseName,"_", c("csr", "fabia", "expected"), "_", n, "_", m, "_", format(sp, digits = 2), "_", format(sd, digits = 2), ".txt")
   
   matrixToCSR(mat, fileNames[1])
   matrixToFabiaSparse(mat, fileNames[2])
@@ -85,7 +85,24 @@ generateResultsFile <- function(n, m, sp = 0.9, sd = 1, basePath = "./") {
   removeMatrixFiles(fileNames)
 }
 
+generateResultsFileReadSamplesSpRfn <- function(n, m, sp = 0.9, sd = 1, basePath = "./") {
+  fileNames <- writeMatrixFiles(n, m, sp, sd, basePath, "readSamplesSpRfn")
+  
+  require(fabia)
+  
+  expected <-fabia::readSamplesSpfabia(getFabiaFile(fileNames))
+  
+  save(expected, file = getExpectedFile(fileNames))
+  
+  removeMatrixFiles(fileNames)
+}
+
 #generateResultsFile(10, 10, 0.9, 1)
+#generateResultsFile(1000, 1000, 0.9, 1)
+#generateResultsFile(100, 200, 0.8, 40)
+#generateResultsFile(100, 200, 0.1, 100)
+
+generateResultsFileReadSamplesSpRfn(10, 10, 0.9, 1)
 #generateResultsFile(1000, 1000, 0.9, 1)
 #generateResultsFile(100, 200, 0.8, 40)
 #generateResultsFile(100, 200, 0.1, 100)

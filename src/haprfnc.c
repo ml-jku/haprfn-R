@@ -267,7 +267,7 @@ SEXP filter_columns_and_create_matrix(const size_t *row_ptr, const size_t *col_i
 }
 
 // sampleS are sorted integers. LENGTH(sampleS) <= nrow
-SEXP readSamplesSpRfn(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
+SEXP readSparseSamples(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS) {
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
   
   const double lowerB = (double) (REAL(lowerBS)[0]);

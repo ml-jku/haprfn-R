@@ -16,7 +16,7 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   .Call("samplesPerFeature", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
-readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
+readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing. Stopped.")
   }
@@ -26,7 +26,7 @@ readSamplesSpRfn <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   lowerB <- as.double(lowerB)
   upperB <- as.double(upperB)
   
-  .Call("readSamplesSpRfn", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
+  .Call("readSparseSamples", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
 
