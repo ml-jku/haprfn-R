@@ -1,13 +1,13 @@
-\name{readSamplesSpRfn}
-\alias{readSamplesSpRfn}
+\name{readSparseSamples}
+\alias{readSparseSamples}
 \title{hapRFN: Read Sparse Matrix Samples}
 \description{
 
-  \code{readSamplesSpRfn}: C implementation of  \code{readSamplesSpRfn}.
+  \code{readSparseSamples}: C implementation of  \code{readSparseSamples}.
 }
 \usage{
 
-readSamplesSpRfn(X, samples = 0, lowerB = 0.0, upperB = 1000.0)
+readSparseSamples(X, samples = 0, lowerB = 0.0, upperB = 1000.0)
 
 }
 \arguments{
