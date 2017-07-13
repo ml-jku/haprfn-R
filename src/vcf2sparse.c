@@ -371,10 +371,12 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
                 // calculate
                 break;
             }
-          } else if (ptr[j] == bcf_int32_vector_end) {
+          } else if (ptr[j] == bcf_int32_vector_end) { // unexpected end of genotype field
             if (j > 0 && missing_ind > 0 && missing[missing_ind - 1] == i * MAX_PLOIDY + (j - 1)) {
+              // if the previous is also missing then set this to missing
               missing[missing_ind++] = i * MAX_PLOIDY + j;
             } else if (j > 0) {
+              // if the previous is not missing, use that value for this
               allele_index = current_matrix[current_interval][i * MAX_PLOIDY + (j - 1)];
             } else {
               print_bcf_error(bcf, "No genotype found.\n", NULL);
@@ -385,6 +387,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
           }
 
           if (missing_ind > 0 && missing[missing_ind - 1] == i * MAX_PLOIDY + j) {
+            // if the current one is missing
             continue;
           }
 
@@ -436,6 +439,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     if (annotate) {
       // annotate add columns
       vcf_format(hdr, bcf, buffer, 1);
+      // delete newline character
       buffer->l = buffer->l - 1;
       float frequency = ((float) current_nnz[current_interval]) / (nsamp * MAX_PLOIDY);
       ksprintf(freq_flip_col, "\t%.8f\t%d\n", frequency, frequency > 0.5);
@@ -499,6 +503,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       n_interval++;
     }
 
+    // log message
     if (nsnp % 1000 == 0) {
       Rprintf("Read SNV: %zu\r", nsnp);
     }
