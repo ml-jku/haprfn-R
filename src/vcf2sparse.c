@@ -261,7 +261,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
     vcf_file_name = create_file_name(file_name, prefix_path, VcfPostfix, IgnoreInterval, IgnoreInterval);
     if (!(file = bcf_open(vcf_file_name, "r"))) {
 
-      REprintf("Cannot open any: \n\t%s\n\t%s\n", vcfgz_file_name, vcf_file_name);
+      REprintf("Cannot open any of: \n\t%s\n\t%s\n", vcfgz_file_name, vcf_file_name);
       goto cleanup;
     }
   }
