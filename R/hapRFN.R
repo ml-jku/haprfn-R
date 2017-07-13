@@ -56,6 +56,74 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
   message("Convert End.")
 }
 
+readInfo <- function(prefixPath, fileName, infoPostfix) {
+  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2))), c("nsamples, nsnps"))
+}
+
+readIndividuals <- function(prefixPath, fileName, individualsPostfix) {
+  read.table(paste0(prefixPath, fileName, individualsPostfix), 
+      header = FALSE, sep = " ", quote = "", as.is = TRUE)
+}
+
+readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples) {
+  maxcol <- 4
+  labels <- c()
+  # If there is no annotation file
+  if (is.null(annotationFile)) {
+    # labelsAA id 1..n and sample names
+    individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
+      
+    # If there is only 1 individual name in the individuals file
+    if (length(individuals[, 2]) >= 2) {
+      col <- individuals[, 2]
+    } else { # Else more than one individual in the file
+      col <- 1:nsamples
+    }
+    if (haplotypes) {
+      col <- rep(col, each = 2)
+    }
+
+    charcol <- as.character(col)
+    matrix(rep(charcol, times = maxcol), ncol = maxcol)
+  } else { # Annotation file exists
+    annotations <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", as.is = TRUE)
+    colnum <- ncol(annotations)
+
+    # try to load without tabs
+    if (colnum < maxcol) {
+      annotations_space <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", as.is = TRUE)
+      if (ncol(annotations_space) > colnum) {
+        annotations <- annotations_space
+        colnum <- ncol(annotations_space)
+      }
+    }
+    
+    columns <- list()
+    for (i in 1:min(colnum, maxcol)) {
+      columns[[i]] <- annotations[, i]
+    }
+    if (min(colnum, maxcol) < maxcol) {
+      individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
+      for (i in (min(colnum, maxcol) + 1):maxcol) {
+        if (length(individuals[, 2]) >= 2) {
+          columns[[i]] <- individuals[, 2]  
+        } else {
+          columns[[i]] <- 1:nsamples
+        }
+      }
+    }
+    if (haplotypes) {
+      columns <- lapply(columns, function(x) rep(x, each=2))
+    }
+    for (i in 1:maxcol) {
+      columns[[i]] <- as.character(columns[[i]])
+      columns[[i]] <- gsub(",", ";", columns[[i]])
+    }
+
+    do.call(cbind, columns)
+  }
+}
+
 iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 10000, 
   annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
   annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", 
@@ -66,16 +134,13 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
   haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", 
   minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE) {
 
-  labelsA <- c()
-  annot <- c()
-  
-  info <- as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2))
+  info <- readInfo(prefixPath, fileName, infoPostfix)
 
-  nsamples <- ina[1]
-  nsnvs <- ina[2]
+  nsamples <- info$nsamples
+  snvs <- info$nsnps
   
   save(nsamples, snvs, file = paste0(fileName, "_All", ".Rda"))
-  
+
   for (posAll in startRun:endRun) {
     start <- (posAll - 1) * shift
     end <- start + intervalSize
@@ -83,181 +148,13 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
     if (end > snvs) {
       end <- snvs
     }
-    
-    pRange <- paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
-    
-    # If there is no annotation file
-    if (is.null(annotationFile)) {
-  
-
-
-      # Read individuals file
-      labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-        sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
         
-      # If there is only 1 individual in the individuals file
-      if (length(labelsAA[, 2]) < 2) {
-        if (haplotypes) { # If phased genotypes
-          lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
-        } else { # Else unphased genotypes
-          lA <- as.vector(1:nsamples)
-        }
-      } else { # Else more than one individual in the file
-        if (haplotypes) {
-          lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
-        } else {
-          lA <- as.vector(labelsAA[, 2])
-        }
-      }
-      indiA <- cbind(as.character(lA), as.character(lA), as.character(lA), 
-        as.character(lA))
-    } else { # Annotation file exists
-
-      # 
-      indit <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", as.is = TRUE)
-      lind <- length(indit)
-
-      if (lind < 4) {
-        inditA <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", as.is = TRUE)
-        if (length(inditA) > lind) {
-          indit <- inditA
-          lind <- length(inditA)
-        }
-      }
-      
-      if (haplotypes) {
-
-
-        # lind # of snps
-        # indit annotations
-        if (lind > 0) {
-          indi1 <- as.vector(unlist(rbind(indit[, 1], indit[, 1])))  # because haplotypes individuals are doubled
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
-          } else {
-            lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
-          }
-          indi1 <- as.character(lA)
-        }
-
-
-        if (lind > 1) {
-          indi2 <- as.vector(unlist(rbind(indit[, 2], indit[, 2])))
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
-          } else {
-            lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
-          }
-          indi2 <- as.character(lA)
-        }
-
-        if (lind > 2) {
-          indi3 <- as.vector(unlist(rbind(indit[, 3], indit[, 3])))
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
-          } else {
-            lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
-          }
-          indi3 <- as.character(lA)
-        }
-
-        if (lind > 3) {
-          indi4 <- as.vector(unlist(rbind(indit[, 4], indit[, 4])))
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(unlist(rbind(1:nsamples, 1:nsamples)))
-          } else {
-            lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
-          }
-          indi4 <- as.character(lA)
-        }
-      } else {
-
-        if (lind > 0) {
-          indi1 <- as.vector(indit[, 1])
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:nsamples)
-          } else {
-            lA <- as.vector(labelsAA[, 2])
-          }
-          indi1 <- as.character(lA)
-        }
-
-        if (lind > 1) {
-          indi2 <- as.vector(indit[, 2])
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:nsamples)
-          } else {
-            lA <- as.vector(labelsAA[, 2])
-          }
-          indi2 <- as.character(lA)
-        }
-
-        if (lind > 2) {
-          indi3 <- as.vector(indit[, 3])
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:nsamples)
-          } else {
-            lA <- as.vector(labelsAA[, 2])
-          }
-          indi3 <- as.character(lA)
-        }
-
-        if (lind > 3) {
-          indi4 <- as.vector(indit[, 4])
-        } else {
-          labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, 
-            sep = ""), header = FALSE, sep = " ", quote = "", as.is = TRUE)
-          if (length(labelsAA[, 2]) < 2) {
-            lA <- as.vector(1:nsamples)
-          } else {
-            lA <- as.vector(labelsAA[, 2])
-          }
-          indi4 <- as.character(lA)
-        }
-      }
-      indi1 <- gsub(",", ";", indi1)
-      indi2 <- gsub(",", ";", indi2)
-      indi3 <- gsub(",", ";", indi3)
-      indi4 <- gsub(",", ";", indi4)
-      indiA <- cbind(indi1, indi2, indi3, indi4)
-      labelsA <- indiA
-    }
-    
-    # Here other labels might be possible: labelsA[,i]: 1=id 2=subPopulation
-    # 3=population 4 = platform
-    
-    # indit <- read.table('phase1_integrated_calls.20101123.ALL.panel', header =
-    # FALSE, sep = '\t', quote = '',as.is=TRUE) indi1 <-
-    # as.vector(unlist(rbind(indit[,1],indit[,1]))) # because haplotypes individuals
-    # are doubled indi2 <- as.vector(unlist(rbind(indit[,2],indit[,2]))) indi3 <-
-    # as.vector(unlist(rbind(indit[,3],indit[,3]))) indi4 <-
-    # as.vector(unlist(rbind(indit[,4],indit[,4]))) indi4 <- gsub(',',';',indi4)
-    # indiA <- cbind(indi1,indi2,indi3,indi4)
+    labels <- readLabels(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples)
+    pRange <- paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
     
     resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
       sparseMatrixPostfix = sparseMatrixPostfix, annotPostfix = annotPostfix, 
-      individualsPostfix = individualsPostfix, labelsA = labelsA, pRange = pRange, 
+      individualsPostfix = individualsPostfix, labelsA = labels, pRange = pRange, 
       individuals = individuals, lowerBP = lowerBP, upperBP = upperBP, p = p, 
       iter = iter, quant = quant, eps = eps, alpha = alpha, cyc = cyc, non_negative = non_negative, 
       write_file = write_file, norm = norm, lap = lap, IBDsegmentLength = IBDsegmentLength, 
@@ -270,6 +167,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))  
     }
     
+    annot <- c()
     save(resHapRFN, annot, file = paste0(fileName, pRange, "_resAnno", ".Rda"))
   }
 }
