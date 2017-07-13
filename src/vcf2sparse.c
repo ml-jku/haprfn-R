@@ -280,8 +280,8 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   }
 
   size_t nsamp = bcf_hdr_nsamples(hdr);
-  for (int i = 0; i < nsamp; i++) {
-    fprintf(individuals_file, "%d %s\n", i + 1, hdr->samples[i]);
+  for (size_t i = 0; i < nsamp; i++) {
+    fprintf(individuals_file, "%zu %s\n", i + 1, hdr->samples[i]);
   }
   fclose(individuals_file);
 	
