@@ -39,7 +39,7 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #       5: abort on missing value
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000, 
                        annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0, 
-                       outputFile = NULL, outputPrefixPath) {
+                       outputFile = NULL, outputPrefixPath = NULL) {
   .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize),
         annotation, genotypes, haplotypes, as.integer(missingValues), outputFile, outputPrefixPath,
         PACKAGE = "hapRFN")
