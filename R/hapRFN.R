@@ -43,6 +43,7 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
   .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize),
         annotation, genotypes, haplotypes, as.integer(missingValues), outputFile, outputPrefixPath,
         PACKAGE = "hapRFN")
+  invisible()
 }
 
 readInfo <- function(prefixPath, fileName, infoPostfix) {
