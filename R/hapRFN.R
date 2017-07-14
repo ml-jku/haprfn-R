@@ -40,20 +40,9 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000, 
                        annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0, 
                        outputFile = NULL) {
-  message("Running 'vcf2sparse' on ", fileName)
-  message("   Path to file ----------------------- : ", prefixPath)
-  if (!is.null(outputFile)) {
-    message("   Output file prefix------------------ : ", outputFile)
-  } else {
-    message("   Output file prefix given by input ----")
-  }
-
   .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize),
         annotation, genotypes, haplotypes, as.integer(missingValues), outputFile, 
         PACKAGE = "hapRFN")
-
-  message("")
-  message("Convert End.")
 }
 
 readInfo <- function(prefixPath, fileName, infoPostfix) {
@@ -170,6 +159,19 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
     annot <- c()
     save(resHapRFN, annot, file = paste0(fileName, pRange, "_resAnno", ".Rda"))
   }
+}
+
+readSparseMatrix <- function(fileName) {
+  con <- file(fileName, "r")
+  lines <- readLines(con, warn = FALSE)
+
+  nnz <- as.integer(lines[1])
+  nrow <- as.integer(lines[2])
+  rowPointer <- as.integer(unlist(strsplit(lines[3], " ", fixed = TRUE)))
+  columnIndices <- as.integer(unlist(strsplit(lines[4], " ", fixed = TRUE)))
+  values <- as.integer(unlist(strsplit(lines[5], " ", fixed = TRUE)))
+
+  sparseMatrix(j = columnIndices, p = rowPointer, x = values, index1 = FALSE)
 }
 
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
@@ -315,27 +317,10 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   mintagSNVs <- round(mintagSNVsFactor * thresA)
   
   # End Compute internal parameters
-  
-  # build DgC Matrix
-  
-  filename1 <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt")
-  
-  filenamelist <- list(filename1)
+    
+  matrixFileName <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt")
+  X <- readSparseMatrix(matrixFileName)
 
-  # SKIP THESE
-  # Crea
-  
-  # What is this?
-  # 
-  res1 <- readsparsematrixlist(filenamelist)
-  
-  # What is this?
-  X <- fillmat2(res1)
-
-  # Create X DgC Matrix 
-
-  
-  
   message("start RFN")
     
   # RFN call
@@ -519,19 +504,15 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
       } else {
         mergedIBDsegmentList <- mergedIBDsegmentList1
       }
-      
     } else {
       mergedIBDsegmentList <- mergedIBDsegmentList1
     }
-    
   } else {
     if (lengthList(mergedIBDsegmentList2) > 0) {
       mergedIBDsegmentList <- mergedIBDsegmentList2
     } else {
       mergedIBDsegmentList <- mergedIBDsegmentList1
     }
-    
-    
   }
   
   mergedIBDsegmentList1 <- setStatistics(mergedIBDsegmentList1)
