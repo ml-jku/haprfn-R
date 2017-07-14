@@ -234,7 +234,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
   const char *prefix_path = isNull(prefix_pathS) ? "" : CHAR(STRING_ELT(prefix_pathS, 0));
   const char *output_file = isNull(output_fileS) ? file_name : CHAR(STRING_ELT(output_fileS, 0));
-  const char *output_prefix = isNULL(output_prefixS) ? prefix_path : CHAR(STRING_ELT(output_prefixS, 0));
+  const char *output_prefix = isNull(output_prefixS) ? prefix_path : CHAR(STRING_ELT(output_prefixS, 0));
   const Rboolean annotate = LOGICAL(annotateS)[0];
   const Rboolean genotypes = LOGICAL(genotypesS)[0];
   const Rboolean haplotypes = LOGICAL(haplotypesS)[0];
