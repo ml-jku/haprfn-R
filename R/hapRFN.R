@@ -47,7 +47,7 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 }
 
 readInfo <- function(prefixPath, fileName, infoPostfix) {
-  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2))), c("nsamples, nsnps"))
+  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2, warn = FALSE))), c("nsamples", "nsnps"))
 }
 
 readIndividuals <- function(prefixPath, fileName, individualsPostfix) {
