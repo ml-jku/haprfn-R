@@ -206,6 +206,9 @@ int read_samples_and_calculate_col_sums(const char *file_name, size_t **row_ptr,
   READ(file, "%zu\n", nrow);
   CHECK(*nrow >= 0, file);
 
+  // This value will be overridden by the maximum value of column indices
+  READ(file, "%zu\n", ncol);
+
   READ(file, "%zu\n", nnz);
   CHECK(*nnz >= 0, file);
   if (*nrow == 0 && *nnz > 0) {
