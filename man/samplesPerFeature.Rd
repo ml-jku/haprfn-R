@@ -27,16 +27,15 @@ samplesPerFeature(X, samples = 0, lowerB = 0.0, upperB = 1000.0)
   in sparse matrix format.
 
   Sparse matrix format:
-  *first line: number of rows (nrow)
-  *second line: number of columns (ncol)
-  *third line: number of nonzero elements (nnz)
-  *fourth line: row pointers, a list of integers of length nrow+1, 
+  *first line: number of nonzero elements (nnz)
+  *second line: number of rows (nrow)
+  *third line: row pointers, a list of integers of length nrow+1, 
     where the ith element is the number of nonzero elements 
     until the i-1th row.
-  *fifth line: column indices, a list of integers of lentgth nnz, 
+  *fourth line: column indices, a list of integers of lentgth nnz, 
     where the ith element is the (zero based) column index 
     of the ith nonzero element
-  *sixth line: values, the list of nonzero elements 
+  *fifth line: values, the list of nonzero elements 
 
   The code is implemented in C.
 

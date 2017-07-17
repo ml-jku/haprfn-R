@@ -24,17 +24,15 @@ typedef enum {
 
 typedef struct {
   size_t nrow;
-  size_t ncol;
   size_t nnz;
   unsigned short *value;
   size_t *column;
   size_t *rows_pointer;
 } sparse_matrix_t;
 
-sparse_matrix_t* matrix_init(const size_t nrow, const size_t ncol, const size_t nnz) {
+sparse_matrix_t* matrix_init(const size_t nrow, const size_t nnz) {
   sparse_matrix_t *matrix = (sparse_matrix_t*) calloc(1, sizeof(sparse_matrix_t));
   matrix->nrow = nrow;
-  matrix->ncol = ncol;
   matrix->nnz = nnz;
   matrix->value = (unsigned short*) calloc(nnz, sizeof(unsigned short));
   matrix->column = (size_t*) calloc(nnz, sizeof(size_t));
@@ -127,7 +125,7 @@ sparse_matrix_t* dense_to_sparse(unsigned short **de_matrix, const unsigned int 
   for (size_t i = 0; i < nrow; i++) {
     nonzero += nnz[i];
   }
-  sparse_matrix_t* sp_matrix = matrix_init(nrow, ncol, nonzero);
+  sparse_matrix_t* sp_matrix = matrix_init(nrow, nonzero);
   size_t cur_val = 0;
   for (size_t i = 0; i < nrow; i++) {
     sp_matrix->rows_pointer[i + 1] = sp_matrix->rows_pointer[i];
@@ -145,7 +143,6 @@ sparse_matrix_t* dense_to_sparse(unsigned short **de_matrix, const unsigned int 
 
 void write_sparse_matrix(sparse_matrix_t *matrix, FILE *file) {
   fprintf(file, "%zd\n", matrix->nrow);
-  fprintf(file, "%zd\n", matrix->ncol);
   fprintf(file, "%zd\n", matrix->nnz);
   for (size_t i = 0; i < matrix->nrow + 1; i++) {
     fprintf(file, "%zd ", matrix->rows_pointer[i]);
