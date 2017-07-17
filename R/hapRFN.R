@@ -152,7 +152,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
       Lt = Lt, Zt = Zt, thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, 
       pMAF = pMAF, haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids, 
       thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs, minIndivid = minIndivid, 
-      avSNVsDist = avSNVsDist, SNVclusterLength = SNVclusterLength, use)
+      avSNVsDist = avSNVsDist, SNVclusterLength = SNVclusterLength, gpu = use_gpu, gpuId = gpu_id)
     
     if (saveAsCsv) {
       IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))  
