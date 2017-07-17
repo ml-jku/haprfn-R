@@ -176,13 +176,13 @@ readSparseMatrix <- function(fileName) {
   sparseMatrix(j = columnIndices, p = rowPointer, x = values, index1 = FALSE)
 }
 
-hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat", 
-  annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", labelsA = NULL, 
-  pRange = "", individuals = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, 
-  quant = 0.01, eps = 1e-05, l1 = 0.0, alpha = 0.03, cyc = 50, non_negative = 1, write_file = 0, 
+hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
+  annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
+  labelsA = NULL, pRange = "", individuals = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
+  quant = 0.01, eps = 1e-05, l1 = 0.0, alpha = 0.03, cyc = 50, non_negative = 1, write_file = 0,
   norm = 0, lap = 100, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05, 
   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, 
-  thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, 
+  thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100,
   SNVclusterLength = 100, gpu = FALSE, gpuId = -1) {
   # fileName:            the file name of the sparse matrix in sparse format.
   # prefixPath:          path of the data file
@@ -298,15 +298,15 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
       inteA <- 100
     }
   }
+
+  snvs <- readInfo(prefixPath, fileName, infoPostfix)$nsnps
+  individualsN <- scan(paste0(prefixPath, fileName, pRange, sparseMatrixPostfix), what = integer(), n = 1)
   
-  ina <- as.numeric(readLines(paste0(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt"), n = 2))
   if (length(individuals) > 1) {
     individualsN <- length(individuals)
   } else {
-    individualsN <- ina[1]
     individuals <- 0
   }
-  snvs <- ina[2]
   
   upperBindivid = upperBP * individualsN  # remove common SNVs
   lowerBindivid = max(1.5, lowerBP * individualsN)  # remove private SNVs
@@ -322,7 +322,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat",
   
   # End Compute internal parameters
     
-  matrixFileName <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix, ".txt")
+  matrixFileName <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix)
   X <- readSparseMatrix(matrixFileName)
 
   message("start RFN")
