@@ -255,6 +255,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   kstring_t* next_buffer = NULL;
   kstring_t* tmps;
 
+  int32_t *gt_arr = NULL, ngt_arr = 0;
 
   vcfgz_file_name = create_file_name(file_name, prefix_path, VcfGzPostfix, IgnoreInterval, IgnoreInterval);
   if (!(file = bcf_open(vcfgz_file_name, "r"))) {
@@ -319,7 +320,6 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   while (bcf_read(file, hdr, bcf) >= 0) {
     nsnp++;
 
-    int32_t *gt_arr = NULL, ngt_arr = 0;
     int ngt = bcf_get_genotypes(hdr, bcf, &gt_arr, &ngt_arr);
 
     if (ngt > 0) {
@@ -543,6 +543,7 @@ cleanup:
   if (next_buffer) free(next_buffer);
   if (vcfgz_file_name) free(vcfgz_file_name);
   if (vcf_file_name) free(vcf_file_name);
+  if (gt_arr) free(gt_arr);
   if (bcf) bcf_destroy(bcf);
   if (hdr) bcf_hdr_destroy(hdr);
 }
