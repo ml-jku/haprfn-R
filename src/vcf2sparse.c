@@ -537,6 +537,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
 
 cleanup:
+  if (file) hts_close(file);
   if (buffer) free(buffer);
   if (freq_flip_col) free(freq_flip_col);
   if (current_buffer) free(current_buffer);
