@@ -273,7 +273,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("   Minimum matching individuals for cluster similarity : ", minIndivid)
   message("                      ")
   message("                      ")
-  
+
   # Maybe remove this when dependency added?
   require("fabia")
   
@@ -299,8 +299,9 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     }
   }
 
-  snvs <- readInfo(prefixPath, fileName, infoPostfix)$nsnps
-  individualsN <- scan(paste0(prefixPath, fileName, pRange, sparseMatrixPostfix), what = integer(), n = 1)
+  info <- readInfo(prefixPath, fileName, infoPostfix)
+  snvs <- info$nsnps
+  individualsN <- info$nsamples
   
   if (length(individuals) > 1) {
     individualsN <- length(individuals)
@@ -384,7 +385,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   
   # Load individuals to Ls of interest: load minor alleles of the Ls
   
-  sPF <- samplesPerFeature(X = paste(prefixPath, fileName, pRange, sparseMatrixPostfix, sep = ""), 
+  sPF <- hapRFN::samplesPerFeature(X = paste(prefixPath, fileName, pRange, sparseMatrixPostfix, sep = ""), 
                            samples = individuals, lowerB = lowerBindivid, upperB = upperBindivid)
 
   if (nchar(annotPostfix) > 0) {
@@ -442,7 +443,6 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   # first haplotype extraction with offset 0
   
   off1 <- 0
-
   IBDsegmentList1 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
     labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA, thresA = thresA, mintagSNVs = mintagSNVs, 
     off = off1, procMinIndivids = procMinIndivids, thresPrune = thresPrune)
