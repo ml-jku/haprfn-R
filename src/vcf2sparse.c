@@ -129,15 +129,17 @@ sparse_matrix_t* dense_to_sparse(unsigned short **de_matrix, const unsigned int 
   for (size_t i = 0; i < nrow; i++) {
     nonzero += nnz[i];
   }
-  sparse_matrix_t* sp_matrix = matrix_init(nrow, nonzero);
+  sparse_matrix_t* sp_matrix = matrix_init(ncol, nonzero);
   size_t cur_val = 0;
-  for (size_t i = 0; i < nrow; i++) {
-    sp_matrix->rows_pointer[i + 1] = sp_matrix->rows_pointer[i];
-    for (size_t j = 0; j < ncol; j++) {
+
+  // i and j switched to transpose the matrix
+  for (size_t j = 0; j < ncol; j++) {
+    sp_matrix->rows_pointer[j + 1] = sp_matrix->rows_pointer[j];
+    for (size_t i = 0; i < nrow; i++) {
       if (de_matrix[i][j] != 0) {
         sp_matrix->value[cur_val] = de_matrix[i][j];
-        sp_matrix->column[cur_val] = j;
-        sp_matrix->rows_pointer[i + 1]++;
+        sp_matrix->column[cur_val] = i;
+        sp_matrix->rows_pointer[j + 1]++;
         cur_val++;
       }
     }
