@@ -171,6 +171,7 @@ readSparseMatrix <- function(fileName) {
   columnIndices <- as.integer(unlist(strsplit(lines[4], " ", fixed = TRUE)))
   values <- as.integer(unlist(strsplit(lines[5], " ", fixed = TRUE)))
 
+  close(con)
   sparseMatrix(j = columnIndices, p = rowPointer, x = values, index1 = FALSE)
 }
 
