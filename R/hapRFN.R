@@ -167,8 +167,6 @@ readSparseMatrix <- function(fileName) {
   con <- file(fileName, "r")
   lines <- readLines(con, warn = FALSE)
 
-  nnz <- as.integer(lines[1])
-  nrow <- as.integer(lines[2])
   rowPointer <- as.integer(unlist(strsplit(lines[3], " ", fixed = TRUE)))
   columnIndices <- as.integer(unlist(strsplit(lines[4], " ", fixed = TRUE)))
   values <- as.integer(unlist(strsplit(lines[5], " ", fixed = TRUE)))
@@ -273,7 +271,6 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("   Minimum matching individuals for cluster similarity : ", minIndivid)
   message("                      ")
   message("                      ")
-
   # Maybe remove this when dependency added?
   require("fabia")
   
@@ -344,9 +341,11 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   cyc <- as.integer(cyc)
   
   p <- as.integer(p)
-  
+
   com <- which(table(X@i)/X@Dim[2] > upperBP)
-  X[com + 1, ] <- 0
+  if (length(com) > 0) {
+    X[com + 1, ] <- 0
+  }
   
   rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = 0.1, etaP = 0.1, 
     minP = 0.01, l1_weightdecay = l1, seed = 0, use_gpu = gpu, gpu_id = gpuId)
