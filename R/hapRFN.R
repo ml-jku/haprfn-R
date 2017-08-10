@@ -172,7 +172,9 @@ readSparseMatrix <- function(fileName) {
   values <- as.integer(unlist(strsplit(lines[5], " ", fixed = TRUE)))
 
   close(con)
-  sparseMatrix(j = columnIndices, p = rowPointer, x = values, index1 = FALSE)
+
+  # Using i instead of j to transpose the matrix
+  sparseMatrix(i = columnIndices, p = rowPointer, x = values, index1 = FALSE)
 }
 
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
@@ -325,7 +327,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   X <- readSparseMatrix(matrixFileName)
 
   message("start RFN")
-    
+
   # RFN call
   l = ncol(X)
   n = nrow(X)
