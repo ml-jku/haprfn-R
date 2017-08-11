@@ -2,4 +2,4 @@ import(Rhtslib, hapFabia, RFN)
 
 useDynLib(hapRFN)
 
-export(samplesPerFeature, readSparseSamples, vcf2sparse, hapRFN, iterateIntervals, identifyDuplicates)
+export(samplesPerFeature, readSparseSamples, vcf2sparse, hapRFN, iterateIntervals, identifyDuplicates, analyzeIBDsegments)

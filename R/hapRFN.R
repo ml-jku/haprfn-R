@@ -649,3 +649,110 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shift = 5000, int
   
   save(dups, un, countsA1, countsA2, file = paste("dups.Rda", sep = ""))
 }
+
+analyzeIBDsegments <- function(fileName, runIndex = "", annotPostfix = "_annot.txt",
+                               startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
+  countsA2 <- c()
+  mergedIBDsegmentList <- list()
+  dups <- c()
+  load(file = paste0(fileName, "_All", ".Rda"))
+  load(file = "dups.Rda")
+  
+  if (startRun > 1 && length(countsA2[,3]) > 1) {
+    tzz <- countsA2[which(countsA2[, 3] < startRun), ]
+    offC <- max(tzz[, 1])
+  } else {
+    offC <-  0
+  }
+  
+  avIBDsegmentPos <- c()
+  avIBDsegmentLengthSNV <- c()
+  avIBDsegmentLength <- c()
+  avnoIndivid <- c()
+  avnoTagSNVs <- c()
+  
+  avnoFreq <- c()
+  avnoGroupFreq <- c()
+  avnotagSNVChange <- c()
+  avnotagSNVsPerIndividual <- c()
+  avnoindividualPerTagSNV <- c()
+  
+  allCount <- 0
+  allCount1 <- 0
+  
+  for (posAll in startRun:endRun) {
+    start <- (posAll-1)*shift
+    end <- start + intervalSize
+    
+    if (end > snvs) {
+      end <- snvs
+    }
+    
+    pRange <- createRangeString(start, end)
+    
+    load(file = paste0(fileName, pRange, "_resAnno.Rda"))
+    
+    mergedIBDsegmentList <- resHapRFN$mergedIBDsegmentList
+    
+    noIBDsegments <- lengthList(mergedIBDsegmentList)
+    
+    if (noIBDsegments > 0) {
+      for (IBDsegmentC in 1:noIBDsegments) {
+        
+        allCount <- allCount + 1
+        
+        if (!dups[allCount + offC]) {
+          
+          allCount1 <- allCount1 + 1
+          
+          vt <- mergedIBDsegmentList[[IBDsegmentC]]
+          
+          avIBDsegmentPos <- c(avIBDsegmentPos, IBDsegmentPos(vt))
+          avIBDsegmentLengthSNV <- c(avIBDsegmentLengthSNV, IBDsegmentLength(vt))
+          avIBDsegmentLength <- c(avIBDsegmentLength, (max(tagSNVPositions(vt)) - min(tagSNVPositions(vt))))
+          avnoIndivid <- c(avnoIndivid, numberIndividuals(vt))
+          avnoTagSNVs <- c(avnoTagSNVs, numbertagSNVs(vt))
+          
+          avnoFreq <- c(avnoFreq, tagSNVFreq(vt))
+          avnoGroupFreq <- c(avnoGroupFreq, tagSNVGroupFreq(vt))
+          avnotagSNVChange <- c(avnotagSNVChange, tagSNVChange(vt))
+          avnotagSNVsPerIndividual <- c(avnotagSNVsPerIndividual, tagSNVsPerIndividual(vt))
+          avnoindividualPerTagSNV <- c(avnoindividualPerTagSNV, individualPerTagSNV(vt))
+        }
+      }
+    }
+  }
+  
+  noIBDsegments <- allCount1
+  
+  avIBDsegmentPosS <- summary(avIBDsegmentPos)
+  avIBDsegmentLengthSNVS <- summary(avIBDsegmentLengthSNV)
+  avIBDsegmentLengthS <- summary(avIBDsegmentLength)
+  avnoIndividS <- summary(avnoIndivid)
+  avnoTagSNVsS <- summary(avnoTagSNVs)
+  
+  avnoFreqS <- summary(avnoFreq)
+  avnoGroupFreqS <- summary(avnoGroupFreq)
+  avnotagSNVChangeS <- summary(avnotagSNVChange)
+  avnotagSNVsPerIndividualS <- summary(avnotagSNVsPerIndividual)
+  avnoindividualPerTagSNVS <- summary(avnoindividualPerTagSNV)
+  
+  save(startRun, endRun, noIBDsegments, avIBDsegmentPos, avIBDsegmentLengthSNV, 
+       avIBDsegmentLength, avnoIndivid, avnoTagSNVs, avnoFreq, avnoGroupFreq,
+       avnotagSNVChange, avnotagSNVsPerIndividual, avnoindividualPerTagSNV, 
+       avIBDsegmentPosS, avIBDsegmentLengthSNVS, avIBDsegmentLengthS, 
+       avnoIndividS, avnoTagSNVsS, avnoFreqS, avnoGroupFreqS, avnotagSNVChangeS,
+       avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS, 
+       file = paste0("analyzeResult", runIndex, ".Rda"))
+  
+  return(list(startRun = startRun, endRun = endRun, noIBDsegments = noIBDsegments,
+              avIBDsegmentPos = avIBDsegmentPos, avIBDsegmentLengthSNV = avIBDsegmentLengthSNV,
+              avIBDsegmentLength = avIBDsegmentLength, avnoIndivid = avnoIndivid,
+              avnoTagSNVs = avnoTagSNVs, avnoFreq = avnoFreq, avnoGroupFreq = avnoGroupFreq,
+              avnotagSNVChange = avnotagSNVChange, avnotagSNVsPerIndividual = avnotagSNVsPerIndividual,
+              avnoindividualPerTagSNV = avnoindividualPerTagSNV, avIBDsegmentPosS = avIBDsegmentPosS,
+              avIBDsegmentLengthSNVS = avIBDsegmentLengthSNVS, avIBDsegmentLengthS = avIBDsegmentLengthS,
+              avnoIndividS = avnoIndividS, avnoTagSNVsS = avnoTagSNVsS, avnoFreqS = avnoFreqS,
+              avnoGroupFreqS = avnoGroupFreqS, avnotagSNVChangeS = avnotagSNVChangeS,
+              avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
+}
