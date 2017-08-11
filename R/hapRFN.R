@@ -1,3 +1,7 @@
+createRangeString <- function(start, end) {
+  paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
+}
+
 samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing.")
@@ -141,7 +145,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
     }
         
     labels <- readLabels(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples)
-    pRange <- paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
+    pRange <- createRangeString(start, end)
     
     resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
       sparseMatrixPostfix = sparseMatrixPostfix, annotPostfix = annotPostfix, 
@@ -531,3 +535,151 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     annot = annot, IBDsegmentList1 = IBDsegmentList1, IBDsegmentList2 = IBDsegmentList2, 
     mergedIBDsegmentList1 = mergedIBDsegmentList1, mergedIBDsegmentList2 = mergedIBDsegmentList2))
 }
+
+identifyDuplicates <- function(fileName, startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
+  labelsA <- c()
+
+  # loads nsamples and snvs
+  load(file = paste(fileName, "_All", ".Rda",sep=""))
+  
+  avIBDsegmentLength <- list()
+  avIBDsegmentPos <- list()
+  count <- 0
+  
+  for (posAll in startRun:endRun)  {
+    start <- (posAll-1)*shift
+    end <- start + intervalSize
+    
+    if (end > snvs)  {
+      end <- snvs
+    }
+    
+    pRange <- createRangeString(start, end)
+    
+    load(file=paste(fileName,pRange,"_resAnno.Rda",sep=""))
+    
+    mergedIBDsegmentList <- resHapFabia$mergedIBDsegmentList
+    
+    noIBDsegments <- lengthList(mergedIBDsegmentList)
+    
+    
+    if (noIBDsegments>0)  {
+      
+      count <- count + noIBDsegments
+      
+      avIBDsegmentPos[[posAll]] <-  sapply(IBDsegments(mergedIBDsegmentList),function(x) {IBDsegmentPos(x)}  , simplify=FALSE)
+      
+      avIBDsegmentLength[[posAll]] <-  sapply(IBDsegments(mergedIBDsegmentList),function(x) {IBDsegmentLength(x)}  , simplify=FALSE)
+      
+    }
+  }
+  
+  
+  IBDsegmentPos <- unlist(avIBDsegmentPos)
+  IBDsegmentLength <- unlist(avIBDsegmentLength)
+  
+  IBDsegmentSim <- cbind(IBDsegmentPos,IBDsegmentLength)
+  
+  dups <- duplicated(IBDsegmentSim)
+  
+  un <- which(dups==FALSE)
+  
+  
+  
+  
+  #### enumerate counts ####
+  
+  
+  
+  
+  allCount <- 0
+  allCount1 <- 0
+  
+  resD <- list()
+  resDA <- list()
+  
+  
+  for (posAll in startRun:endRun)  {
+    
+    start <- (posAll-1)*shift
+    end <- start + intervalSize
+    
+    if (end > snvs)  {
+      
+      end <- snvs
+    }
+    
+    
+    
+    pRange <- createRangeString(start, end)
+    
+    load(file=paste(fileName,pRange,"_resAnno.Rda",sep=""))
+    
+    mergedIBDsegmentList <- resHapFabia$mergedIBDsegmentList
+    
+    noIBDsegments <- lengthList(mergedIBDsegmentList)
+    
+    if (noIBDsegments>0)  {
+      
+      for (IBDsegmentC in 1:noIBDsegments)  {
+        
+        allCount <- allCount + 1
+        
+        resD1 <- c(allCount,IBDsegmentC,posAll)
+        resDA[[allCount]] <- resD1
+        
+        if (!dups[allCount]) {
+          
+          allCount1 <- allCount1 + 1
+          
+          resD1 <- c(allCount1,allCount,IBDsegmentC,posAll)
+          resD[[allCount1]] <- resD1
+          
+          
+          
+        }
+        
+        
+      }
+      
+    }
+    
+    
+  }
+  
+  
+  if ( length(resD) >0 ) {
+    rr <- unlist(resD)
+    l <-4
+    
+    countsA1 <- matrix(rr,nrow=allCount1,ncol=l,byrow=TRUE)
+    
+    colnames(countsA1) <- c("allCount1","allCount","IBDsegmentC","posAll")
+    
+    rr <- unlist(resDA)
+    l <-3
+    
+    countsA2 <- matrix(rr,nrow=allCount,ncol=l,byrow=TRUE)
+    
+    colnames(countsA2) <- c("allCount","IBDsegmentC","posAll")
+    
+  } else {
+    
+    dups <- FALSE
+    un <- 0
+    countsA1 <- c(0,0,0,0)
+    dim(countsA1) <- c(1,4)
+    colnames(countsA1) <- c("allCount1","allCount","IBDsegmentC","posAll")
+    countsA2 <- c(0,0,0)
+    dim(countsA2) <- c(1,3)
+    colnames(countsA2) <- c("allCount","IBDsegmentC","posAll")
+    
+  }
+  
+  # write.table(countsA1,file=paste("countsA1",runIndex,".txt",sep=""))
+  # write.table(countsA2,file=paste("countsA2",runIndex,".txt",sep=""))
+  
+  save(dups,un,countsA1,countsA2,file=paste("dups.Rda",sep=""))
+}
+
+
