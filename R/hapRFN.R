@@ -122,7 +122,7 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #' @param outputPrefixPath The path to the output file.
 #'   Default is the \code{prefixPath}.
 #'
-#' @return NULL
+#' @return None
 #'
 #' @export
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
@@ -152,7 +152,7 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #' @param saveAsCsv Save merged IBD segment list as CSV file
 #'   for every interval. Default = FALSE.
 #'
-#' @return NULL
+#' @return None
 #'
 #' @export
 iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000, 
@@ -221,7 +221,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #'
 #' @template ref-rfn
 #'
-#' @return NULL
+#' @return None
 #'
 #' @export
 #' @importFrom stats pbinom cutree
@@ -565,7 +565,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #' @param intervalSize Size of the interval of each split.
 #'   Default value = 10000.
 #'
-#' @return NULL
+#' @return None
 #'
 #' @export
 identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
