@@ -144,6 +144,7 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #'
 #' @param startRun The index of the first interval.
 #' @param endRun The index of the last interval. Required.
+#' @param annotationFile The name of the annotation file for the individuals.
 #' @param fileName The base name of the input file. Required.
 #' @template param-in-file
 #' @template param-interval

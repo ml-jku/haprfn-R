@@ -29,6 +29,8 @@ features are skipped between intervals. Default value = 5000.}
 \item{intervalSize}{Size of the interval of each split.
 Default value = 10000.}
 
+\item{annotationFile}{The name of the annotation file for the individuals.}
+
 \item{fileName}{The base name of the input file. Required.}
 
 \item{prefixPath}{The path to the input file. Default is the current directory.}
