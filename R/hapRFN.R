@@ -296,8 +296,6 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("   Minimum matching individuals for cluster similarity : ", minIndivid)
   message("                      ")
   message("                      ")
-  # Maybe remove this when dependency added?
-  requireNamespace("fabia")
   
   # Compute internal parameters
   
