@@ -227,6 +227,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @importFrom stats pbinom cutree
 #' @importFrom utils read.table
 #' @importFrom RFN train_rfn
+#' @importFrom methods new
 #'
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
@@ -553,6 +554,13 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #' @title Identify duplicates.
 #'
 #' @description
+#'   \code{identifyDuplicates} identifies IBD segments that are similar to
+#'   each other. This function is used in combination with \code{vcf2sparse}
+#'   which splits a VCF file into overlapping intervals. These intervals are
+#'   then analyzed by \code{analyzeIntervals}, and the checked for duplicates
+#'   by this function.
+#'
+#'   Results are written to the file "dups.Rda".
 #'
 #' @param fileName The name of the Rda result file.
 #' @param startRun The index of the first interval.
@@ -682,7 +690,19 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 
 #' @title Analyze IBD segments.
 #'
-#' @description 
+#' @description
+#'   \code{analyzeIBDsegments} loops over all intervals and provides
+#'   statistics about the IBD segments.
+#'
+#' @details
+#'   The function loops over all intervals and provides statistics about the
+#'   IBD segments. The loop goes over the intervals that have been provided by
+#'   \code{iterateIntervals}. Duplicates are ignore at this analysis and must
+#'   be identified in a preceding step via \code{identifyDuplicates}.
+#'   Other statistics and annotations can be computed if the code is changed
+#'   accordingly.
+#'
+#'   Results are written to the file "analyzeResults.Rda".
 #'
 #' @param fileName The name of the Rda result file.
 #' @param startRun The index of the first interval.
@@ -697,16 +717,19 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   \item{startRun}{The parameter startRun.}
 #'   \item{endRun}{The parameter endRun.}
 #'   \item{noIBDsegments}{The number of IBD segments.}
-#'   \item{avIBDsegmentPos}{Vecotr of the genomic locations of the IBD segments.}
+#'   \item{avIBDsegmentPos}{Vector of the genomic locations of the IBD segments.}
 #'   \item{avIBDsegmentLengthSNV}{Vector of lengths in SNVs of the IBD segments.}
 #'   \item{avIBDsegmentLength}{Vector of lengths in bp of the IBD segments.}
 #'   \item{avnoIndivid}{Vector of number of samples belonging to the IBD segments.}
 #'   \item{avnoTagSNVs}{Vector of number of tag SNVs marking the IBD segments.}
 #'   \item{avnoFreq}{Vector of frequencies of tagSNVs in the whole dataset.}
-#'   \item{avnoGroupFreq}{Vector of frequencies of tagSNVs in the population that is considered.}
-#'   \item{avnotagSNVChange}{Vector of flags that show if the alleles were switched.}
-#'   \item{avnotagSNVsPerIndividual}{}
-#'   \item{avnoindividualPerTagSNV}{}
+#'   \item{avnoGroupFreq}{Vector of frequencies of tagSNVs in the population
+#'     that is considered.}
+#'   \item{avnotagSNVChange}{Vector of flags indicating a switch between minor
+#'     and major alleles of tagSNVs (1 means switched, 0 not switched).}
+#'   \item{avnotagSNVsPerIndividual}{Vector of number of tagSNVs per individual.}
+#'   \item{avnoindividualPerTagSNV}{Vector of number of individuals that posses
+#'     the minor allele per tagSNV.}
 #'   \item{avIBDsegmentPosS}{Summary of avIBDsegmentPos.}
 #'   \item{avIBDsegmentLengthSNVS}{Summary of avIBDsegmentLengthSNV.}
 #'   \item{avIBDsegmentLengthS}{Summary of avIBDsegmentLength.}
@@ -718,6 +741,9 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   \item{avnotagSNVsPerIndividualS}{Summary of avnotagSNVsPerIndividual.}
 #'   \item{avnoindividualPerTagSNVS}{Summary of avnoindividualPerTagSNV.}
 #'
+#' @seealso \code{\link{iterateIntervals}} and
+#'   \code{\link{identifyDuplicates}}
+#' 
 #' @export
 analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
   countsA2 <- c()
@@ -900,6 +926,7 @@ analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, sh
   }
 }
 
+#' @importFrom Matrix sparseMatrix
 # Read sparse matrix from file
 .readSparseMatrix <- function(fileName) {
   con <- file(fileName, "r")

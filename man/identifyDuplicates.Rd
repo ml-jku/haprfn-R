@@ -25,5 +25,11 @@ Default value = 10000.}
 None
 }
 \description{
+\code{identifyDuplicates} identifies IBD segments that are similar to
+  each other. This function is used in combination with \code{vcf2sparse}
+  which splits a VCF file into overlapping intervals. These intervals are
+  then analyzed by \code{analyzeIntervals}, and the checked for duplicates
+  by this function.
 
+  Results are written to the file "dups.Rda".
 }
