@@ -576,7 +576,6 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
   labelsA <- c()
   snvs <- c()
   resHapRFN <- c()
-  shift <- c()
 
   # loads nsamples and snvs
   load(file = paste(fileName, "_All", ".Rda",sep=""))
@@ -586,7 +585,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
   count <- 0
   
   for (posAll in startRun:endRun) {
-    start <- (posAll-1)*shift
+    start <- (posAll-1)*shiftSize
     end <- start + intervalSize
     
     if (end > snvs) {
@@ -626,7 +625,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
   resDA <- list()
   
   for (posAll in startRun:endRun) {
-    start <- (posAll-1)*shift
+    start <- (posAll-1)*shiftSize
     end <- start + intervalSize
     
     if (end > snvs) {
@@ -743,7 +742,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   \code{\link{identifyDuplicates}}
 #' 
 #' @export
-analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
+analyzeIBDsegments <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
   countsA2 <- c()
   mergedIBDsegmentList <- list()
   dups <- c()
@@ -776,7 +775,7 @@ analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, sh
   allCount1 <- 0
   
   for (posAll in startRun:endRun) {
-    start <- (posAll-1)*shift
+    start <- (posAll-1)*shiftSize
     end <- start + intervalSize
     
     if (end > snvs) {
@@ -838,7 +837,7 @@ analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, sh
        avIBDsegmentPosS, avIBDsegmentLengthSNVS, avIBDsegmentLengthS, 
        avnoIndividS, avnoTagSNVsS, avnoFreqS, avnoGroupFreqS, avnotagSNVChangeS,
        avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS, 
-       file = paste0("analyzeResult", runIndex, ".Rda"))
+       file = paste0("analyzeResult", ".Rda"))
   
   return(list(startRun = startRun, endRun = endRun, noIBDsegments = noIBDsegments,
               avIBDsegmentPos = avIBDsegmentPos, avIBDsegmentLengthSNV = avIBDsegmentLengthSNV,

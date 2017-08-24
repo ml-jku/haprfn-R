@@ -4,8 +4,8 @@
 \alias{analyzeIBDsegments}
 \title{Analyze IBD segments.}
 \usage{
-analyzeIBDsegments(fileName, runIndex = "", startRun = 1, endRun,
-  shift = 5000, intervalSize = 10000)
+analyzeIBDsegments(fileName, startRun = 1, endRun, shiftSize = 5000,
+  intervalSize = 10000)
 }
 \arguments{
 \item{fileName}{The name of the Rda result file.}
@@ -14,12 +14,12 @@ analyzeIBDsegments(fileName, runIndex = "", startRun = 1, endRun,
 
 \item{endRun}{The index of the last interval. Required.}
 
-\item{intervalSize}{Size of the interval of each split.
-Default value = 10000.}
-
 \item{shiftSize}{Size of the distance between the beginning of the
 intervals. Should be smaller than the interval size, otherwise
 features are skipped between intervals. Default value = 5000.}
+
+\item{intervalSize}{Size of the interval of each split.
+Default value = 10000.}
 }
 \value{
 A list with elements
