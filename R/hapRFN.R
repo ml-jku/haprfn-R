@@ -8,7 +8,11 @@
 #' @details
 #'   Supplies the samples for which a feature is not zero.
 #'
-#' @template sparse-matrix 
+#' @template sparse-matrix
+
+#' @param X The file name of the sparse matrix, in sparse format.
+#' @template param-samples
+#' @template param-matrix-filter
 #'
 #' @return A list with elements
 #'   \item{sL}{List with one element per feature: each element is a vector
@@ -45,7 +49,11 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'   Reads the sparse matrix samples filtered by \code{samples}, \code{lowerB}
 #'.  and \code{upperB}.
 #'
-#' @template sparse-matrix 
+#' @template sparse-matrix
+#'
+#' @param X The file name of the sparse matrix, in sparse format.
+#' @template param-samples
+#' @template param-matrix-filter
 #'
 #' @return Data matrix of given samples
 #'
@@ -75,7 +83,7 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'
 #'   The code is implemented in C.
 #'
-#' @template in-out-file-param
+#' @template param-in-file
 #'
 #' @param annotation TRUE to generate the annotation file for each interval.
 #'   Annotation file names end with \code{_annot.txt}. Default value = TRUE.
@@ -103,6 +111,10 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'     \item{5}{abort on missing value}
 #'   }
 #'   Default value = 0.
+#' @param outputFile The base name of the output file. The file postfix and
+#'   extension will be appended to this file. Default is the input file name.
+#' @param outputPrefixPath The path to the output file.
+#'   Default is the \code{prefixPath}.
 #'
 #' @return
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
@@ -125,6 +137,8 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #'
 #' @param startRun The index of the first interval.
 #' @param endRun The index of the last interval.
+#' @template param-in-file
+#' @template param-samples
 #' @template param-rfn
 #' @param saveAsCsv Save merged IBD segment list as CSV file
 #'   for every interval. Default = FALSE.
@@ -188,6 +202,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @param labelsA Individual names as matrix individuals x 4.
 #' @param prange For intervals indicates its range.
 #' @template param-rfn
+#' @template param-samples
 #'
 #' @seealso RFN, hapRFN papers
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",

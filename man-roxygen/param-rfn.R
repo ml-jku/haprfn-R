@@ -1,8 +1,13 @@
-#' @template param-in-file
-#'
 #' @param sparseMatrixPostfix The posftix for the input matrices.
 #'   Default = "_mat.txt".
-#' @template sparse-matrix-filter
+#' @param samples Vector of samples using one-based indexing,
+#'   representing the samples that are read. Zero means read all samples.
+#'   Default = 0.
+#' @param lowerBP Lower bound for filtering the inputs columns, minimal MAF 
+#'   (however more than one occurence to remove private SNVs).
+#'   Default = 0.0.
+#' @param upperBP Upper bound for filtering the inputs columns, minimal MAF.
+#'   Default = 0.05.
 #' @param p Number of biclusters per iteration. Default = 10.
 #' @param iter Number iterations. Default = 40.
 #' @param quant Percentage of Ls to remove in each iteration.
