@@ -122,6 +122,8 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #' @param outputPrefixPath The path to the output file.
 #'   Default is the \code{prefixPath}.
 #'
+#' @return NULL
+#'
 #' @export
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
                        annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0,
@@ -149,6 +151,8 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #' @template param-rfn
 #' @param saveAsCsv Save merged IBD segment list as CSV file
 #'   for every interval. Default = FALSE.
+#'
+#' @return NULL
 #'
 #' @export
 iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000, 
@@ -216,6 +220,8 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @template param-rfn
 #'
 #' @seealso RFN, hapRFN papers
+#'
+#' @return NULL
 #'
 #' @export
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
@@ -334,7 +340,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   mintagSNVs <- round(mintagSNVsFactor * thresA)
   
   # End Compute internal parameters
-    
+  
   matrixFileName <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix)
   X <- .readSparseMatrix(matrixFileName)
 
@@ -507,8 +513,6 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   }
   
   # merge IBD segments of both extractions
-  
-  
   if (lengthList(mergedIBDsegmentList1) > 0) {
     if (lengthList(mergedIBDsegmentList2) > 0) {
       comp12 <- compareIBDsegmentLists(IBDsegmentList1 = mergedIBDsegmentList1, 
@@ -556,6 +560,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #'   features are skipped between intervals. Default value = 5000.
 #' @param intervalSize Size of the interval of each split.
 #'   Default value = 10000.
+#'
+#' @return NULL
 #'
 #' @export
 identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
@@ -665,12 +671,20 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
     dim(countsA2) <- c(1, 3)
     colnames(countsA2) <- c("allCount", "IBDsegmentC", "posAll")
   }
-  
-  # write.table(countsA1,file=paste("countsA1",runIndex,".txt",sep=""))
-  # write.table(countsA2,file=paste("countsA2",runIndex,".txt",sep=""))
-  
+    
   save(dups, un, countsA1, countsA2, file = paste("dups.Rda", sep = ""))
 }
+
+  return(list(startRun = startRun, endRun = endRun, noIBDsegments = noIBDsegments,
+              avIBDsegmentPos = avIBDsegmentPos, avIBDsegmentLengthSNV = avIBDsegmentLengthSNV,
+              avIBDsegmentLength = avIBDsegmentLength, avnoIndivid = avnoIndivid,
+              avnoTagSNVs = avnoTagSNVs, avnoFreq = avnoFreq, avnoGroupFreq = avnoGroupFreq,
+              avnotagSNVChange = avnotagSNVChange, avnotagSNVsPerIndividual = avnotagSNVsPerIndividual,
+              avnoindividualPerTagSNV = avnoindividualPerTagSNV, avIBDsegmentPosS = avIBDsegmentPosS,
+              avIBDsegmentLengthSNVS = avIBDsegmentLengthSNVS, avIBDsegmentLengthS = avIBDsegmentLengthS,
+              avnoIndividS = avnoIndividS, avnoTagSNVsS = avnoTagSNVsS, avnoFreqS = avnoFreqS,
+              avnoGroupFreqS = avnoGroupFreqS, avnotagSNVChangeS = avnotagSNVChangeS,
+              avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
 
 #' @title Analyze IBD segments.
 #'
@@ -684,6 +698,31 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   features are skipped between intervals. Default value = 5000.
 #' @param intervalSize Size of the interval of each split.
 #'   Default value = 10000.
+#'
+#' @return A list with elements
+#'   item{startRun}{The parameter startRun.}
+#'   item{endRun}{The parameter endRun.}
+#'   item{noIBDsegments}{The number of IBD segments.}
+#'   item{avIBDsegmentPos}{Vecotr of the genomic locations of the IBD segments.}
+#'   item{avIBDsegmentLengthSNV}{Vector of lengths in SNVs of the IBD segments.}
+#'   item{avIBDsegmentLength}{Vector of lengths in bp of the IBD segments.}
+#'   item{avnoIndivid}{Vector of number of samples belonging to the IBD segments.}
+#'   item{avnoTagSNVs}{Vector of number of tag SNVs marking the IBD segments.}
+#'   item{avnoFreq}{Vector of frequencies of tagSNVs in the whole dataset.}
+#'   item{avnoGroupFreq}{Vector of frequencies of tagSNVs in the population that is considered.}
+#'   item{avnotagSNVChange}{Vector of flags that show if the alleles were switched.}
+#'   item{avnotagSNVsPerIndividual}{}
+#'   item{avnoindividualPerTagSNV}{}
+#'   item{avIBDsegmentPosS}{Summary of avIBDsegmentPos.}
+#'   item{avIBDsegmentLengthSNVS}{Summary of avIBDsegmentLengthSNV.}
+#'   item{avIBDsegmentLengthS}{Summary of avIBDsegmentLength.}
+#'   item{avnoIndividS}{Summary of avnoIndivid.}
+#'   item{avnoTagSNVsS}{Summary of avnoTagSNVs.}
+#'   item{avnoFreqS}{Summary of avnoFreq.}
+#'   item{avnoGroupFreqS}{Summary of avnoGroupFreq.}
+#'   item{avnotagSNVChangeS}{Summary of avnotagSNVChange.}
+#'   item{avnotagSNVsPerIndividualS}{Summary of avnotagSNVsPerIndividual.}
+#'   item{avnoindividualPerTagSNVS}{Summary of avnoindividualPerTagSNV.}
 #'
 #' @export
 analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
