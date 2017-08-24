@@ -675,17 +675,6 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
   save(dups, un, countsA1, countsA2, file = paste("dups.Rda", sep = ""))
 }
 
-  return(list(startRun = startRun, endRun = endRun, noIBDsegments = noIBDsegments,
-              avIBDsegmentPos = avIBDsegmentPos, avIBDsegmentLengthSNV = avIBDsegmentLengthSNV,
-              avIBDsegmentLength = avIBDsegmentLength, avnoIndivid = avnoIndivid,
-              avnoTagSNVs = avnoTagSNVs, avnoFreq = avnoFreq, avnoGroupFreq = avnoGroupFreq,
-              avnotagSNVChange = avnotagSNVChange, avnotagSNVsPerIndividual = avnotagSNVsPerIndividual,
-              avnoindividualPerTagSNV = avnoindividualPerTagSNV, avIBDsegmentPosS = avIBDsegmentPosS,
-              avIBDsegmentLengthSNVS = avIBDsegmentLengthSNVS, avIBDsegmentLengthS = avIBDsegmentLengthS,
-              avnoIndividS = avnoIndividS, avnoTagSNVsS = avnoTagSNVsS, avnoFreqS = avnoFreqS,
-              avnoGroupFreqS = avnoGroupFreqS, avnotagSNVChangeS = avnotagSNVChangeS,
-              avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
-
 #' @title Analyze IBD segments.
 #'
 #' @description 
@@ -700,29 +689,29 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   Default value = 10000.
 #'
 #' @return A list with elements
-#'   item{startRun}{The parameter startRun.}
-#'   item{endRun}{The parameter endRun.}
-#'   item{noIBDsegments}{The number of IBD segments.}
-#'   item{avIBDsegmentPos}{Vecotr of the genomic locations of the IBD segments.}
-#'   item{avIBDsegmentLengthSNV}{Vector of lengths in SNVs of the IBD segments.}
-#'   item{avIBDsegmentLength}{Vector of lengths in bp of the IBD segments.}
-#'   item{avnoIndivid}{Vector of number of samples belonging to the IBD segments.}
-#'   item{avnoTagSNVs}{Vector of number of tag SNVs marking the IBD segments.}
-#'   item{avnoFreq}{Vector of frequencies of tagSNVs in the whole dataset.}
-#'   item{avnoGroupFreq}{Vector of frequencies of tagSNVs in the population that is considered.}
-#'   item{avnotagSNVChange}{Vector of flags that show if the alleles were switched.}
-#'   item{avnotagSNVsPerIndividual}{}
-#'   item{avnoindividualPerTagSNV}{}
-#'   item{avIBDsegmentPosS}{Summary of avIBDsegmentPos.}
-#'   item{avIBDsegmentLengthSNVS}{Summary of avIBDsegmentLengthSNV.}
-#'   item{avIBDsegmentLengthS}{Summary of avIBDsegmentLength.}
-#'   item{avnoIndividS}{Summary of avnoIndivid.}
-#'   item{avnoTagSNVsS}{Summary of avnoTagSNVs.}
-#'   item{avnoFreqS}{Summary of avnoFreq.}
-#'   item{avnoGroupFreqS}{Summary of avnoGroupFreq.}
-#'   item{avnotagSNVChangeS}{Summary of avnotagSNVChange.}
-#'   item{avnotagSNVsPerIndividualS}{Summary of avnotagSNVsPerIndividual.}
-#'   item{avnoindividualPerTagSNVS}{Summary of avnoindividualPerTagSNV.}
+#'   \item{startRun}{The parameter startRun.}
+#'   \item{endRun}{The parameter endRun.}
+#'   \item{noIBDsegments}{The number of IBD segments.}
+#'   \item{avIBDsegmentPos}{Vecotr of the genomic locations of the IBD segments.}
+#'   \item{avIBDsegmentLengthSNV}{Vector of lengths in SNVs of the IBD segments.}
+#'   \item{avIBDsegmentLength}{Vector of lengths in bp of the IBD segments.}
+#'   \item{avnoIndivid}{Vector of number of samples belonging to the IBD segments.}
+#'   \item{avnoTagSNVs}{Vector of number of tag SNVs marking the IBD segments.}
+#'   \item{avnoFreq}{Vector of frequencies of tagSNVs in the whole dataset.}
+#'   \item{avnoGroupFreq}{Vector of frequencies of tagSNVs in the population that is considered.}
+#'   \item{avnotagSNVChange}{Vector of flags that show if the alleles were switched.}
+#'   \item{avnotagSNVsPerIndividual}{}
+#'   \item{avnoindividualPerTagSNV}{}
+#'   \item{avIBDsegmentPosS}{Summary of avIBDsegmentPos.}
+#'   \item{avIBDsegmentLengthSNVS}{Summary of avIBDsegmentLengthSNV.}
+#'   \item{avIBDsegmentLengthS}{Summary of avIBDsegmentLength.}
+#'   \item{avnoIndividS}{Summary of avnoIndivid.}
+#'   \item{avnoTagSNVsS}{Summary of avnoTagSNVs.}
+#'   \item{avnoFreqS}{Summary of avnoFreq.}
+#'   \item{avnoGroupFreqS}{Summary of avnoGroupFreq.}
+#'   \item{avnotagSNVChangeS}{Summary of avnotagSNVChange.}
+#'   \item{avnotagSNVsPerIndividualS}{Summary of avnotagSNVsPerIndividual.}
+#'   \item{avnoindividualPerTagSNVS}{Summary of avnoindividualPerTagSNV.}
 #'
 #' @export
 analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, shift = 5000, intervalSize = 10000) {

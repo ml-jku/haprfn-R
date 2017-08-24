@@ -21,6 +21,32 @@ Default value = 10000.}
 intervals. Should be smaller than the interval size, otherwise
 features are skipped between intervals. Default value = 5000.}
 }
+\value{
+A list with elements
+  \item{startRun}{The parameter startRun.}
+  \item{endRun}{The parameter endRun.}
+  \item{noIBDsegments}{The number of IBD segments.}
+  \item{avIBDsegmentPos}{Vecotr of the genomic locations of the IBD segments.}
+  \item{avIBDsegmentLengthSNV}{Vector of lengths in SNVs of the IBD segments.}
+  \item{avIBDsegmentLength}{Vector of lengths in bp of the IBD segments.}
+  \item{avnoIndivid}{Vector of number of samples belonging to the IBD segments.}
+  \item{avnoTagSNVs}{Vector of number of tag SNVs marking the IBD segments.}
+  \item{avnoFreq}{Vector of frequencies of tagSNVs in the whole dataset.}
+  \item{avnoGroupFreq}{Vector of frequencies of tagSNVs in the population that is considered.}
+  \item{avnotagSNVChange}{Vector of flags that show if the alleles were switched.}
+  \item{avnotagSNVsPerIndividual}{}
+  \item{avnoindividualPerTagSNV}{}
+  \item{avIBDsegmentPosS}{Summary of avIBDsegmentPos.}
+  \item{avIBDsegmentLengthSNVS}{Summary of avIBDsegmentLengthSNV.}
+  \item{avIBDsegmentLengthS}{Summary of avIBDsegmentLength.}
+  \item{avnoIndividS}{Summary of avnoIndivid.}
+  \item{avnoTagSNVsS}{Summary of avnoTagSNVs.}
+  \item{avnoFreqS}{Summary of avnoFreq.}
+  \item{avnoGroupFreqS}{Summary of avnoGroupFreq.}
+  \item{avnotagSNVChangeS}{Summary of avnotagSNVChange.}
+  \item{avnotagSNVsPerIndividualS}{Summary of avnotagSNVsPerIndividual.}
+  \item{avnoindividualPerTagSNVS}{Summary of avnoindividualPerTagSNV.}
+}
 \description{
 
 }
