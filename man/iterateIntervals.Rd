@@ -20,12 +20,43 @@ iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
 \arguments{
 \item{startRun}{The index of the first interval.}
 
-\item{endRun}{The index of the last interval.}
+\item{endRun}{The index of the last interval. Required.}
+
+\item{shiftSize}{Size of the distance between the beginning of the
+intervals. Should be smaller than the interval size, otherwise
+features are skipped between intervals. Default value = 5000.}
+
+\item{intervalSize}{Size of the interval of each split.
+Default value = 10000.}
+
+\item{fileName}{The base name of the input file. Required.}
+
+\item{prefixPath}{The path to the input file. Default is the current directory.}
 
 \item{sparseMatrixPostfix}{The posftix for the input matrices.
 Default = "_mat.txt".}
 
+\item{annotationPostfix}{The postfix for the annotation files.
+Default value = "_annot.txt".}
+
+\item{individualsPostfix}{The postfix for the files containing
+the individuals. Default value = "_individuals.txt".}
+
+\item{infoPostfix}{The postfix for the info file.
+Default value = "_info.txt".}
+
+\item{samples}{Vector of samples using one-based indexing,
+representing the samples that are read. Zero means read all samples.
+Default = 0.}
+
 \item{l1}{l1 weight decay. Default = 0.0.}
+
+\item{lowerBP}{Lower bound for filtering the inputs columns, minimal MAF 
+(however more than one occurence to remove private SNVs).
+Default = 0.0.}
+
+\item{upperBP}{Upper bound for filtering the inputs columns, minimal MAF.
+Default = 0.05.}
 
 \item{p}{Number of biclusters per iteration. Default = 10.}
 
