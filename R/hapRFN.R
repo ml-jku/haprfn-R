@@ -225,8 +225,8 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #'
 #' @export
 #' @importFrom stats pbinom cutree
-#' @importFrom methods new
 #' @importFrom utils read.table
+#' @importFrom RFN train_rfn
 #'
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
@@ -900,7 +900,6 @@ analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, sh
   }
 }
 
-#' @importFrom Matrix sparseMatrix
 # Read sparse matrix from file
 .readSparseMatrix <- function(fileName) {
   con <- file(fileName, "r")

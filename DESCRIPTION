@@ -6,8 +6,8 @@ Authors@R: c(person("Balazs", "Bencze", role = c("aut", "cre"),
                      email = "bencze.balazs@yahoo.com"),
              person("Sepp", "Hochreiter", role = "aut"),
              person("Gundula", "Povysil", role = "ths"))
-Imports: hapFabia
-Depends: R (>= 3.1.0), Rhtslib, RFN
+Imports: hapFabia, RFN, Matrix
+Depends: R (>= 3.1.0), Rhtslib
 LinkingTo: Rhtslib
 Description: Used for analyzing variant call files (VCF) 
   for finding short identity by descent (IBD) segments. This
