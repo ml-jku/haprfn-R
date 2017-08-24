@@ -259,7 +259,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("                      ")
   message("                      ")
   # Maybe remove this when dependency added?
-  require("fabia")
+  requireNamespace("fabia")
   
   # Compute internal parameters
   
