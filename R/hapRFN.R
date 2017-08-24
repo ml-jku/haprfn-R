@@ -1,7 +1,22 @@
-createRangeString <- function(start, end) {
-  paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
-}
-
+#' @title 
+#'   Samples with non-zero feature.
+#' 
+#' @description
+#'   \code{samplesPerFeature} returns the samples for each feature, where
+#'   this is non-zero
+#'
+#' @details
+#'   Supplies the samples for which a feature is not zero.
+#'
+#' @template sparse-matrix 
+#'
+#' @return A list with elements
+#'   \item{sL}{List with one element per feature: each element is a vector
+#'     of samples where the feature is not zero.}
+#'   \item{nsL}{Vector of feature length containing number of samples having
+#'     a non-zero feature value.}
+#'
+#' @template seealso
 samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing.")
@@ -20,6 +35,21 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   .Call("samplesPerFeature", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
+#' @title 
+#'   Read sparse matrix samples.
+#' 
+#' @description
+#'   \code{readSparseSamples} Reads sparse matrix samples.
+#'
+#' @details
+#'   Reads the sparse matrix samples filtered by \code{samples}, \code{lowerB}
+#'.  and \code{upperB}.
+#'
+#' @template sparse-matrix 
+#'
+#' @return Data matrix of given samples
+#'
+#' @template seealso
 readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing. Stopped.")
@@ -33,101 +63,81 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   .Call("readSparseSamples", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
-
-## Missing values ->
-#       0: default: look for frequency defined in INFO as AF or calculate
-#       1: major allele
-#       2: minor allele
-#       3: look for AF field or abort
-#       4: calculate
-#       5: abort on missing value
-vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000, 
-                       annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0, 
-                       outputFile = NULL, outputPrefixPath = NULL) {
+#' @title
+#'   Transforming VCF files.
+#'
+#' @description
+#'   \code{vcf2sparse} converts and splits VCF files into sparse matrices.
+#'
+#' @details
+#'   Reads a VCF file, converts it into a sparse matrix format, splits it into intervals
+#'   and writes the result into files. It generates multiple files.
+#'
+#'   The code is implemented in C.
+#'
+#' @template in-out-file-param
+#'
+#' @param annotation TRUE to generate the annotation file for each interval.
+#'   Annotation file names end with \code{_annot.txt}. Default value = TRUE.
+#' @param haplotype TRUE to generate the haplotype matrix for each interval.
+#'   Rows are features. For each sample there are two columns, for each
+#'   haplotype, having a value of \eqn{1} if the variant is present, zero
+#'   otherwise. Default value = FALSE.
+#' @param genotypesPostfix The postfix for the genotypes files. Default
+#'   value = "_matG.txt".
+#' @param haplotypesPostfix The postfix for the haplotypes files. Default
+#'   value = "_math.txt".
+#' @param genotypes TRUE to generate genotype matrix for each interval.
+#'   The genotype matrix is a combined version of the haplotype matrix.
+#'   Each row is a feature and each column a sample, having a value of
+#'   \eqn{2} if variant is present in both haplotypes, \eqn{1} if the 
+#'   variant is present in one haplotype, \eqn{0} otherwise. Default
+#'   value = TRUE.
+#' @param missingValues Flag specifying how to deal with missing values.
+#'   \describe{
+#'     \item{0}{look for frequency defined in the INFO tag as AF or estimate}
+#'     \item{1}{assume missing value as major allele}
+#'     \item{2}{assume missing value as minor allele}
+#'     \item{3}{look for frequency defined in the INFO tag as AF or abort}
+#'     \item{4}{estimate based on available information}
+#'     \item{5}{abort on missing value}
+#'   }
+#'   Default value = 0.
+#'
+#' @return
+vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
+                       annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0,
+                       annotationPostfix = "_annot.txt", genotypesPostfix = "_matG.txt",
+                       haplotypesPostfix = "_matH.txt", infoPostfix = "_info.txt",
+                       individualsPostfix = "_individuals.txt", outputFile = NULL,
+                       outputPrefixPath = NULL) {
   .Call("vcf2sparse", fileName, prefixPath, as.integer(intervalSize), as.integer(shiftSize),
-        annotation, genotypes, haplotypes, as.integer(missingValues), outputFile, outputPrefixPath,
+        annotation, genotypes, haplotypes, as.integer(missingValues), annotationPostfix,
+        genotypesPostfix, haplotypesPostfix, infoPostfix, individualsPostfix, outputFile,
+        outputPrefixPath,
         PACKAGE = "hapRFN")
   invisible()
 }
 
-readInfo <- function(prefixPath, fileName, infoPostfix) {
-  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2, warn = FALSE))), c("nsamples", "nsnps"))
-}
-
-readIndividuals <- function(prefixPath, fileName, individualsPostfix) {
-  read.table(paste0(prefixPath, fileName, individualsPostfix), 
-      header = FALSE, sep = " ", quote = "", as.is = TRUE)
-}
-
-readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples) {
-  maxcol <- 4
-  labels <- c()
-  # If there is no annotation file
-  if (is.null(annotationFile)) {
-    # labelsAA id 1..n and sample names
-    individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
-      
-    # If there is only 1 individual name in the individuals file
-    if (length(individuals[, 2]) >= 2) {
-      col <- individuals[, 2]
-    } else { # Else more than one individual in the file
-      col <- 1:nsamples
-    }
-    if (haplotypes) {
-      col <- rep(col, each = 2)
-    }
-
-    charcol <- as.character(col)
-    matrix(rep(charcol, times = maxcol), ncol = maxcol)
-  } else { # Annotation file exists
-    annotations <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", as.is = TRUE)
-    colnum <- ncol(annotations)
-
-    # try to load without tabs
-    if (colnum < maxcol) {
-      annotations_space <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", as.is = TRUE)
-      if (ncol(annotations_space) > colnum) {
-        annotations <- annotations_space
-        colnum <- ncol(annotations_space)
-      }
-    }
-    
-    columns <- list()
-    for (i in 1:min(colnum, maxcol)) {
-      columns[[i]] <- annotations[, i]
-    }
-    if (min(colnum, maxcol) < maxcol) {
-      individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
-      for (i in (min(colnum, maxcol) + 1):maxcol) {
-        if (length(individuals[, 2]) >= 2) {
-          columns[[i]] <- individuals[, 2]  
-        } else {
-          columns[[i]] <- 1:nsamples
-        }
-      }
-    }
-    if (haplotypes) {
-      columns <- lapply(columns, function(x) rep(x, each=2))
-    }
-    for (i in 1:maxcol) {
-      columns[[i]] <- as.character(columns[[i]])
-      columns[[i]] <- gsub(",", ";", columns[[i]])
-    }
-
-    do.call(cbind, columns)
-  }
-}
-
-iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 10000, 
+#' @title Iterate intervals.
+#'
+#' @description Iterate over intervals and run hapRFN.
+#'
+#' @param startRun The index of the first interval.
+#' @param endRun The index of the last interval.
+#' @template param-rfn
+#' @param saveAsCsv Save merged IBD segment list as CSV file
+#'   for every interval. Default = FALSE.
+iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000, 
   annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
-  annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", 
-  infoPostfix = "_info.txt", individuals = 0, l1 = 0.0,
+  annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", 
+  infoPostfix = "_info.txt", samples = 0, l1 = 0.0,
   lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, quant = 0.01, eps = 1e-05, alpha = 0.03, 
   cyc = 50, non_negative = 1, write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50, 
   Lt = 0.1, Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03, 
   haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", 
   minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE,
-  use_gpu = TRUE, gpu_id = 0) {
+  useGpu = TRUE, gpuId = 0) {
 
   info <- readInfo(prefixPath, fileName, infoPostfix)
 
@@ -137,7 +147,7 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
   save(nsamples, snvs, file = paste0(fileName, "_All", ".Rda"))
 
   for (posAll in startRun:endRun) {
-    start <- (posAll - 1) * shift
+    start <- (posAll - 1) * shiftSize
     end <- start + intervalSize
 
     if (end > snvs) {
@@ -148,15 +158,15 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
     pRange <- createRangeString(start, end)
     
     resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
-      sparseMatrixPostfix = sparseMatrixPostfix, annotPostfix = annotPostfix, 
+      sparseMatrixPostfix = sparseMatrixPostfix, annotationPostfix = annotationPostfix, 
       individualsPostfix = individualsPostfix, labelsA = labels, pRange = pRange, 
-      individuals = individuals, lowerBP = lowerBP, upperBP = upperBP, p = p, 
-      iter = iter, quant = quant, eps = eps, alpha = alpha, cyc = cyc, non_negative = non_negative, 
+      samples = samples, lowerBP = lowerBP, upperBP = upperBP, p = p, 
+      iter = iter, quant = quant, eps = eps, l1 = l1, alpha = alpha, cyc = cyc, non_negative = non_negative, 
       write_file = write_file, norm = norm, lap = lap, IBDsegmentLength = IBDsegmentLength, 
       Lt = Lt, Zt = Zt, thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, 
       pMAF = pMAF, haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids, 
       thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs, minIndivid = minIndivid, 
-      avSNVsDist = avSNVsDist, SNVclusterLength = SNVclusterLength, gpu = use_gpu, gpuId = gpu_id)
+      avSNVsDist = avSNVsDist, SNVclusterLength = SNVclusterLength, useGpu = useGpu, gpuId = gpuId)
     
     if (saveAsCsv) {
       IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))  
@@ -167,57 +177,27 @@ iterateIntervals <- function(startRun = 1, endRun, shift = 5000, intervalSize = 
   }
 }
 
-readSparseMatrix <- function(fileName) {
-  con <- file(fileName, "r")
-  lines <- readLines(con, warn = FALSE)
-
-  rowPointer <- as.integer(unlist(strsplit(lines[3], " ", fixed = TRUE)))
-  columnIndices <- as.integer(unlist(strsplit(lines[4], " ", fixed = TRUE)))
-  values <- as.integer(unlist(strsplit(lines[5], " ", fixed = TRUE)))
-
-  close(con)
-
-  # Using i instead of j to transpose the matrix
-  sparseMatrix(i = columnIndices, p = rowPointer, x = values, index1 = FALSE)
-}
-
+#' @title Identifying IBD segments.
+#'
+#' @description Identifying short IBD segments using RFNs.
+#'
+#' @details 
+#'   Identifying short identity by descent (IBD) segments using Rectified
+#'   Factor Networks (RFNs).
+#'
+#' @param labelsA Individual names as matrix individuals x 4.
+#' @param prange For intervals indicates its range.
+#' @template param-rfn
+#'
+#' @seealso RFN, hapRFN papers
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
-  annotPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
-  labelsA = NULL, pRange = "", individuals = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
+  annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
+  labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
   quant = 0.01, eps = 1e-05, l1 = 0.0, alpha = 0.03, cyc = 50, non_negative = 1, write_file = 0,
   norm = 0, lap = 100, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05, 
   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, 
   thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100,
-  SNVclusterLength = 100, gpu = FALSE, gpuId = -1) {
-  # fileName:            the file name of the sparse matrix in sparse format.
-  # prefixPath:          path of the data file
-  # sparseMatrixPostfix: postfix string for the sparse matrix
-  # annotPostfix:        postfix string for the annotation file
-  # labelsA:             individual names as matrix individuals x 4
-  # prange:              for intervals indicates its range
-  # individuals:             vector of individuals which should be included into the analysis; default = 0 (all individuals)
-  # lowerBP:             lower bound for filtering the inputs columns, minimal MAF (however more than one occurence to remove private SNVs)
-  # upperBP:             Upper bound for filtering the inputs columns, minimal MAF
-  # p:                   no biclusters per iteration
-  # alpha:               sparseness loadings; default = 0.03
-  # iter:                number iterations
-  # quant:               percentage of Ls to remove in each iteration
-  # eps:                 lower bound for variational parameter lapla; default: 1e-5
-  # l1:                  l1 weight decay
-  # cyc:                 number of iterations; default = 50
-  # non_negative:        Non-negative factors and loadings if non_negative; default = 1 (yes).
-  # write_file:          results are written to files (L in sparse format), default = 0 (not written).
-  # norm:                data normalization; default = 1 (no normalization).
-  # lap:                 minimal value of the variational parameter; default = 100.0.
-  # IBDsegmentLength:           IBD segment length in kbp
-  # Lt:                  percentage of largest Ls to consider for IBD segment extraction
-  # Zt:                  percentage of largest Zs to consider for IBD segment extraction
-  # thresCount:          p-value of random histogram hit, default 1e-5
-  # mintagSNVsFactor:       percentage of segments overlap in IBD segments; 1/2 for large to 3/4 for small intervals
-  # pMAF:                averaged and corrected minor allele frequency
-  # haplotypes:          haplotypes = phased genotypes -> two chromosomes per individual
-  # gpu:                 TRUE to use GPU. Use this parameter together with gpuId
-  # gpuId:               the ID of the GPU. This is used, when gpu is TRUE
+  SNVclusterLength = 100, useGpu = FALSE, gpuId = -1) {
   
   message("                      ")
   message("                      ")
@@ -237,8 +217,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     message("   Individuals annotation is supplied -----------------")
   }
   message("   String indicating the interval that is analyzed ----: ", pRange)
-  if (length(individuals) > 1) {
-    message("   Number of individuals included into the analysis ---: ", length(individuals))
+  if (length(samples) > 1) {
+    message("   Number of individuals included into the analysis ---: ", length(samples))
   } else {
     message("   All individuals are included into the analysis -----: 0 = all individuals")
   }
@@ -307,8 +287,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   snvs <- info$nsnps
   individualsN <- info$nsamples
   
-  if (length(individuals) > 1) {
-    individualsN <- length(individuals)
+  if (length(samples) > 1) {
+    individualsN <- length(samples)
   } else {
     individuals <- 0
   }
@@ -355,7 +335,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   }
   
   rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = 0.1, etaP = 0.1, 
-    minP = 0.01, l1_weightdecay = l1, seed = 0, use_gpu = gpu, gpu_id = gpuId)
+    minP = 0.01, l1_weightdecay = l1, seed = 0, use_gpu = useGpu, gpu_id = gpuId)
   
   myL = rfn_res$W
   myPsi = as.vector(rfn_res$P)
@@ -392,16 +372,16 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   # Load individuals to Ls of interest: load minor alleles of the Ls
   
   sPF <- hapRFN::samplesPerFeature(X = paste(prefixPath, fileName, pRange, sparseMatrixPostfix, sep = ""), 
-                           samples = individuals, lowerB = lowerBindivid, upperB = upperBindivid)
+                           samples = samples, lowerB = lowerBindivid, upperB = upperBindivid)
 
-  if (nchar(annotPostfix) > 0) {
+  if (nchar(annotationPostfix) > 0) {
     # annot[[1]] <- chromosome annot[[2]] <- phys. position annot[[3]] <- snvNames
     # annot[[4]] <- snvMajor annot[[5]] <- snvMinor annot[[6]] <- quality annot[[7]]
     # <- pass annot[[8]] <- info of vcf file annot[[9]] <- fields in vcf file
     # annot[[10]] <- frequency annot[[11]] <- 1 = changed if major allele is actually
     # minor allele otherwise 0
     
-    annot <- read.table(paste(prefixPath, fileName, pRange, annotPostfix, sep = ""), 
+    annot <- read.table(paste(prefixPath, fileName, pRange, annotationPostfix, sep = ""), 
       header = FALSE, sep = "\t", quote = "", as.is = TRUE, skip = 2)
     
     for (i in 1:length(annot)) {
@@ -650,7 +630,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shift = 5000, int
   save(dups, un, countsA1, countsA2, file = paste("dups.Rda", sep = ""))
 }
 
-analyzeIBDsegments <- function(fileName, runIndex = "", annotPostfix = "_annot.txt",
+analyzeIBDsegments <- function(fileName, runIndex = "", annotationPostfix = "_annot.txt",
                                startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
   countsA2 <- c()
   mergedIBDsegmentList <- list()
@@ -756,3 +736,93 @@ analyzeIBDsegments <- function(fileName, runIndex = "", annotPostfix = "_annot.t
               avnoGroupFreqS = avnoGroupFreqS, avnotagSNVChangeS = avnotagSNVChangeS,
               avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
 }
+
+readInfo <- function(prefixPath, fileName, infoPostfix) {
+  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2, warn = FALSE))), c("nsamples", "nsnps"))
+}
+
+readIndividuals <- function(prefixPath, fileName, individualsPostfix) {
+  read.table(paste0(prefixPath, fileName, individualsPostfix), 
+      header = FALSE, sep = " ", quote = "", as.is = TRUE)
+}
+
+readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples) {
+  maxcol <- 4
+  labels <- c()
+  # If there is no annotation file
+  if (is.null(annotationFile)) {
+    # labelsAA id 1..n and sample names
+    individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
+      
+    # If there is only 1 individual name in the individuals file
+    if (length(individuals[, 2]) >= 2) {
+      col <- individuals[, 2]
+    } else { # Else more than one individual in the file
+      col <- 1:nsamples
+    }
+    if (haplotypes) {
+      col <- rep(col, each = 2)
+    }
+
+    charcol <- as.character(col)
+    matrix(rep(charcol, times = maxcol), ncol = maxcol)
+  } else { # Annotation file exists
+    annotations <- read.table(annotationFile, header = FALSE, sep = "\t", quote = "", as.is = TRUE)
+    colnum <- ncol(annotations)
+
+    # try to load without tabs
+    if (colnum < maxcol) {
+      annotations_space <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", as.is = TRUE)
+      if (ncol(annotations_space) > colnum) {
+        annotations <- annotations_space
+        colnum <- ncol(annotations_space)
+      }
+    }
+    
+    columns <- list()
+    for (i in 1:min(colnum, maxcol)) {
+      columns[[i]] <- annotations[, i]
+    }
+    if (min(colnum, maxcol) < maxcol) {
+      individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
+      for (i in (min(colnum, maxcol) + 1):maxcol) {
+        if (length(individuals[, 2]) >= 2) {
+          columns[[i]] <- individuals[, 2]  
+        } else {
+          columns[[i]] <- 1:nsamples
+        }
+      }
+    }
+    if (haplotypes) {
+      columns <- lapply(columns, function(x) rep(x, each=2))
+    }
+    for (i in 1:maxcol) {
+      columns[[i]] <- as.character(columns[[i]])
+      columns[[i]] <- gsub(",", ";", columns[[i]])
+    }
+
+    do.call(cbind, columns)
+  }
+}
+
+readSparseMatrix <- function(fileName) {
+  con <- file(fileName, "r")
+  lines <- readLines(con, warn = FALSE)
+
+  rowPointer <- as.integer(unlist(strsplit(lines[3], " ", fixed = TRUE)))
+  columnIndices <- as.integer(unlist(strsplit(lines[4], " ", fixed = TRUE)))
+  values <- as.integer(unlist(strsplit(lines[5], " ", fixed = TRUE)))
+
+  close(con)
+
+  # Using i instead of j to transpose the matrix
+  sparseMatrix(i = columnIndices, p = rowPointer, x = values, index1 = FALSE)
+}
+
+
+
+createRangeString <- function(start, end) {
+  paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
+}
+
+
