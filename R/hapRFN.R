@@ -1,5 +1,9 @@
-#' @title 
-#'   Samples with non-zero feature.
+#' @import Rhtslib 
+#' @import hapFabia
+#' @import RFN
+#' @useDynLib hapRFN
+
+#' @title Samples with non-zero feature.
 #' 
 #' @description
 #'   \code{samplesPerFeature} returns the samples for each feature, where
@@ -8,7 +12,11 @@
 #' @details
 #'   Supplies the samples for which a feature is not zero.
 #'
-#' @template sparse-matrix 
+#' @template descr-sparse-matrix
+
+#' @param X The name of the file, containing a matrix in sparse format.
+#' @template param-samples
+#' @template param-matrix-filter
 #'
 #' @return A list with elements
 #'   \item{sL}{List with one element per feature: each element is a vector
@@ -17,6 +25,8 @@
 #'     a non-zero feature value.}
 #'
 #' @template seealso
+#'
+#' @export
 samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing.")
@@ -35,21 +45,25 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   .Call("samplesPerFeature", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
-#' @title 
-#'   Read sparse matrix samples.
+#' @title Read sparse matrix samples.
 #' 
-#' @description
-#'   \code{readSparseSamples} Reads sparse matrix samples.
+#' @description \code{readSparseSamples} Reads sparse matrix samples.
 #'
 #' @details
 #'   Reads the sparse matrix samples filtered by \code{samples}, \code{lowerB}
 #'.  and \code{upperB}.
 #'
-#' @template sparse-matrix 
+#' @template descr-sparse-matrix
+#'
+#' @param X The name of the file, containing a matrix in sparse format.
+#' @template param-samples
+#' @template param-matrix-filter
 #'
 #' @return Data matrix of given samples
 #'
 #' @template seealso
+#'
+#' @export
 readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing. Stopped.")
@@ -63,8 +77,7 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   .Call("readSparseSamples", X, samples, lowerB, upperB, PACKAGE = "hapRFN")
 }
 
-#' @title
-#'   Transforming VCF files.
+#' @title Transforming VCF files.
 #'
 #' @description
 #'   \code{vcf2sparse} converts and splits VCF files into sparse matrices.
@@ -75,18 +88,15 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'
 #'   The code is implemented in C.
 #'
-#' @template in-out-file-param
-#'
+#' @param fileName The name of the input VCF file without the extension. The extension must 
+#'   be one of .vcf or .vcf.gz, and the format must match the extension. Required.
+#' @template param-in-file
 #' @param annotation TRUE to generate the annotation file for each interval.
 #'   Annotation file names end with \code{_annot.txt}. Default value = TRUE.
-#' @param haplotype TRUE to generate the haplotype matrix for each interval.
+#' @param haplotypes TRUE to generate the haplotype matrix for each interval.
 #'   Rows are features. For each sample there are two columns, for each
 #'   haplotype, having a value of \eqn{1} if the variant is present, zero
 #'   otherwise. Default value = FALSE.
-#' @param genotypesPostfix The postfix for the genotypes files. Default
-#'   value = "_matG.txt".
-#' @param haplotypesPostfix The postfix for the haplotypes files. Default
-#'   value = "_math.txt".
 #' @param genotypes TRUE to generate genotype matrix for each interval.
 #'   The genotype matrix is a combined version of the haplotype matrix.
 #'   Each row is a feature and each column a sample, having a value of
@@ -103,8 +113,16 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'     \item{5}{abort on missing value}
 #'   }
 #'   Default value = 0.
+#' @param genotypesPostfix The postfix for the genotypes files. Default
+#'   value = "_matG.txt".
+#' @param haplotypesPostfix The postfix for the haplotypes files. Default
+#'   value = "_math.txt".
+#' @param outputFile The base name of the output file. The file postfix and
+#'   extension will be appended to this file. Default is the input file name.
+#' @param outputPrefixPath The path to the output file.
+#'   Default is the \code{prefixPath}.
 #'
-#' @return
+#' @export
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
                        annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0,
                        annotationPostfix = "_annot.txt", genotypesPostfix = "_matG.txt",
@@ -124,10 +142,15 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #' @description Iterate over intervals and run hapRFN.
 #'
 #' @param startRun The index of the first interval.
-#' @param endRun The index of the last interval.
+#' @param endRun The index of the last interval. Required.
+#' @param fileName The base name of the input file. Required.
+#' @template param-in-file
+#' @template param-samples
 #' @template param-rfn
 #' @param saveAsCsv Save merged IBD segment list as CSV file
 #'   for every interval. Default = FALSE.
+#'
+#' @export
 iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000, 
   annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", 
@@ -139,7 +162,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
   minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE,
   useGpu = TRUE, gpuId = 0) {
 
-  info <- readInfo(prefixPath, fileName, infoPostfix)
+  info <- .readInfo(prefixPath, fileName, infoPostfix)
 
   nsamples <- info$nsamples
   snvs <- info$nsnps
@@ -154,8 +177,8 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
       end <- snvs
     }
         
-    labels <- readLabels(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples)
-    pRange <- createRangeString(start, end)
+    labels <- .readLabels(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples)
+    pRange <- .createRangeString(start, end)
     
     resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
       sparseMatrixPostfix = sparseMatrixPostfix, annotationPostfix = annotationPostfix, 
@@ -185,11 +208,16 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #'   Identifying short identity by descent (IBD) segments using Rectified
 #'   Factor Networks (RFNs).
 #'
+#' @param fileName The base name of the input file.
+#' @template param-in-file
 #' @param labelsA Individual names as matrix individuals x 4.
 #' @param prange For intervals indicates its range.
+#' @template param-samples
 #' @template param-rfn
 #'
 #' @seealso RFN, hapRFN papers
+#'
+#' @export
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
   labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
@@ -283,7 +311,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     }
   }
 
-  info <- readInfo(prefixPath, fileName, infoPostfix)
+  info <- .readInfo(prefixPath, fileName, infoPostfix)
   snvs <- info$nsnps
   individualsN <- info$nsamples
   
@@ -308,7 +336,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   # End Compute internal parameters
     
   matrixFileName <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix)
-  X <- readSparseMatrix(matrixFileName)
+  X <- .readSparseMatrix(matrixFileName)
 
   message("start RFN")
 
@@ -516,7 +544,21 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     mergedIBDsegmentList1 = mergedIBDsegmentList1, mergedIBDsegmentList2 = mergedIBDsegmentList2))
 }
 
-identifyDuplicates <- function(fileName, startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
+#' @title Identify duplicates.
+#'
+#' @description
+#'
+#' @param fileName The name of the Rda result file.
+#' @param startRun The index of the first interval.
+#' @param endRun The index of the last interval. Required.
+#' @param shiftSize Size of the distance between the beginning of the
+#'   intervals. Should be smaller than the interval size, otherwise
+#'   features are skipped between intervals. Default value = 5000.
+#' @param intervalSize Size of the interval of each split.
+#'   Default value = 10000.
+#'
+#' @export
+identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
   labelsA <- c()
 
   # loads nsamples and snvs
@@ -534,7 +576,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shift = 5000, int
       end <- snvs
     }
     
-    pRange <- createRangeString(start, end)
+    pRange <- .createRangeString(start, end)
     
     load(file = paste0(fileName, pRange, "_resAnno.Rda"))
     
@@ -574,7 +616,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shift = 5000, int
       end <- snvs
     }
     
-    pRange <- createRangeString(start, end)
+    pRange <- .createRangeString(start, end)
     
     load(file = paste(fileName, pRange, "_resAnno.Rda", sep = ""))
     
@@ -630,8 +672,21 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shift = 5000, int
   save(dups, un, countsA1, countsA2, file = paste("dups.Rda", sep = ""))
 }
 
-analyzeIBDsegments <- function(fileName, runIndex = "", annotationPostfix = "_annot.txt",
-                               startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
+#' @title Analyze IBD segments.
+#'
+#' @description 
+#'
+#' @param fileName The name of the Rda result file.
+#' @param startRun The index of the first interval.
+#' @param endRun The index of the last interval. Required.
+#' @param shiftSize Size of the distance between the beginning of the
+#'   intervals. Should be smaller than the interval size, otherwise
+#'   features are skipped between intervals. Default value = 5000.
+#' @param intervalSize Size of the interval of each split.
+#'   Default value = 10000.
+#'
+#' @export
+analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
   countsA2 <- c()
   mergedIBDsegmentList <- list()
   dups <- c()
@@ -668,7 +723,7 @@ analyzeIBDsegments <- function(fileName, runIndex = "", annotationPostfix = "_an
       end <- snvs
     }
     
-    pRange <- createRangeString(start, end)
+    pRange <- .createRangeString(start, end)
     
     load(file = paste0(fileName, pRange, "_resAnno.Rda"))
     
@@ -737,22 +792,25 @@ analyzeIBDsegments <- function(fileName, runIndex = "", annotationPostfix = "_an
               avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
 }
 
-readInfo <- function(prefixPath, fileName, infoPostfix) {
+# Read info file and return a list with nsamples and nsnps
+.readInfo <- function(prefixPath, fileName, infoPostfix) {
   setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2, warn = FALSE))), c("nsamples", "nsnps"))
 }
 
-readIndividuals <- function(prefixPath, fileName, individualsPostfix) {
+# Read individuals file
+.readIndividuals <- function(prefixPath, fileName, individualsPostfix) {
   read.table(paste0(prefixPath, fileName, individualsPostfix), 
       header = FALSE, sep = " ", quote = "", as.is = TRUE)
 }
 
-readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples) {
+# Read individuals file
+.readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples) {
   maxcol <- 4
   labels <- c()
   # If there is no annotation file
   if (is.null(annotationFile)) {
     # labelsAA id 1..n and sample names
-    individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
+    individuals <- .readIndividuals(prefixPath, fileName, individualsPostfix)
       
     # If there is only 1 individual name in the individuals file
     if (length(individuals[, 2]) >= 2) {
@@ -784,7 +842,7 @@ readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile,
       columns[[i]] <- annotations[, i]
     }
     if (min(colnum, maxcol) < maxcol) {
-      individuals <- readIndividuals(prefixPath, fileName, individualsPostfix)
+      individuals <- .readIndividuals(prefixPath, fileName, individualsPostfix)
       for (i in (min(colnum, maxcol) + 1):maxcol) {
         if (length(individuals[, 2]) >= 2) {
           columns[[i]] <- individuals[, 2]  
@@ -805,7 +863,8 @@ readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile,
   }
 }
 
-readSparseMatrix <- function(fileName) {
+# Read sparse matrix from file
+.readSparseMatrix <- function(fileName) {
   con <- file(fileName, "r")
   lines <- readLines(con, warn = FALSE)
 
@@ -819,10 +878,7 @@ readSparseMatrix <- function(fileName) {
   sparseMatrix(i = columnIndices, p = rowPointer, x = values, index1 = FALSE)
 }
 
-
-
-createRangeString <- function(start, end) {
+# Create range string (usually used as pRange)
+.createRangeString <- function(start, end) {
   paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
 }
-
-

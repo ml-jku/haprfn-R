@@ -14,6 +14,3 @@
 #'     of the \eqn{i}th non-zero element
 #'   \item values, the list of non-zero elements
 #' }
-#'
-#' @param X The file name of the sparse matrix, in sparse format.
-#' @template sparse-matrix-filter

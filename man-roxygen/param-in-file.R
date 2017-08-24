@@ -1,5 +1,3 @@
-#' @param fileName The name of the input VCF file without the extension. The extension must 
-#'   be one of .vcf or .vcf.gz, and the format must match the extension. Required.
 #' @param prefixPath The path to the input file. Default is the current directory.
 #' @param intervalSize Size of the interval of each split.
 #'   Default value = 10000.

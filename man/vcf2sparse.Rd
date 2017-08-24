@@ -12,6 +12,18 @@ vcf2sparse(fileName, prefixPath = NULL, intervalSize = 10000,
   outputFile = NULL, outputPrefixPath = NULL)
 }
 \arguments{
+\item{fileName}{The name of the input VCF file without the extension. The extension must 
+be one of .vcf or .vcf.gz, and the format must match the extension. Required.}
+
+\item{prefixPath}{The path to the input file. Default is the current directory.}
+
+\item{intervalSize}{Size of the interval of each split.
+Default value = 10000.}
+
+\item{shiftSize}{Size of the distance between the beginning of the
+intervals. Should be smaller than the interval size, otherwise
+features are skipped between intervals. Default value = 5000.}
+
 \item{annotation}{TRUE to generate the annotation file for each interval.
 Annotation file names end with \code{_annot.txt}. Default value = TRUE.}
 
@@ -21,6 +33,11 @@ Each row is a feature and each column a sample, having a value of
 \eqn{2} if variant is present in both haplotypes, \eqn{1} if the 
 variant is present in one haplotype, \eqn{0} otherwise. Default
 value = TRUE.}
+
+\item{haplotypes}{TRUE to generate the haplotype matrix for each interval.
+Rows are features. For each sample there are two columns, for each
+haplotype, having a value of \eqn{1} if the variant is present, zero
+otherwise. Default value = FALSE.}
 
 \item{missingValues}{Flag specifying how to deal with missing values.
 \describe{
@@ -33,21 +50,26 @@ value = TRUE.}
 }
 Default value = 0.}
 
+\item{annotationPostfix}{The postfix for the annotation files.
+Default value = "_annot.txt".}
+
 \item{genotypesPostfix}{The postfix for the genotypes files. Default
 value = "_matG.txt".}
 
 \item{haplotypesPostfix}{The postfix for the haplotypes files. Default
 value = "_math.txt".}
 
+\item{infoPostfix}{The postfix for the info file.
+Default value = "_info.txt".}
+
+\item{individualsPostfix}{The postfix for the files containing
+the individuals. Default value = "_individuals.txt".}
+
 \item{outputFile}{The base name of the output file. The file postfix and
 extension will be appended to this file. Default is the input file name.}
 
-\item{outputPrefixPath}{The path to the output file. Default is the \code{prefixPath}.}
-
-\item{haplotype}{TRUE to generate the haplotype matrix for each interval.
-Rows are features. For each sample there are two columns, for each
-haplotype, having a value of \eqn{1} if the variant is present, zero
-otherwise. Default value = FALSE.}
+\item{outputPrefixPath}{The path to the output file.
+Default is the \code{prefixPath}.}
 }
 \description{
 \code{vcf2sparse} converts and splits VCF files into sparse matrices.
