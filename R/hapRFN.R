@@ -1,3 +1,8 @@
+#' @import Rhtslib 
+#' @import hapFabia
+#' @import RFN
+#' @useDynLib hapRFN
+
 #' @title Samples with non-zero feature.
 #' 
 #' @description
@@ -20,6 +25,8 @@
 #'     a non-zero feature value.}
 #'
 #' @template seealso
+#'
+#' @export
 samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing.")
@@ -55,6 +62,8 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #' @return Data matrix of given samples
 #'
 #' @template seealso
+#'
+#' @export
 readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing. Stopped.")
@@ -112,6 +121,8 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'   extension will be appended to this file. Default is the input file name.
 #' @param outputPrefixPath The path to the output file.
 #'   Default is the \code{prefixPath}.
+#'
+#' @export
 vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
                        annotation = TRUE, genotypes = TRUE, haplotypes = FALSE, missingValues = 0,
                        annotationPostfix = "_annot.txt", genotypesPostfix = "_matG.txt",
@@ -138,6 +149,8 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #' @template param-rfn
 #' @param saveAsCsv Save merged IBD segment list as CSV file
 #'   for every interval. Default = FALSE.
+#'
+#' @export
 iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000, 
   annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", 
@@ -203,6 +216,8 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @template param-rfn
 #'
 #' @seealso RFN, hapRFN papers
+#'
+#' @export
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
   labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
@@ -541,6 +556,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #'   features are skipped between intervals. Default value = 5000.
 #' @param intervalSize Size of the interval of each split.
 #'   Default value = 10000.
+#'
+#' @export
 identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
   labelsA <- c()
 
@@ -667,6 +684,8 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   features are skipped between intervals. Default value = 5000.
 #' @param intervalSize Size of the interval of each split.
 #'   Default value = 10000.
+#'
+#' @export
 analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, shift = 5000, intervalSize = 10000) {
   countsA2 <- c()
   mergedIBDsegmentList <- list()
