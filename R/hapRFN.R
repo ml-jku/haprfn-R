@@ -724,6 +724,9 @@ analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, sh
   countsA2 <- c()
   mergedIBDsegmentList <- list()
   dups <- c()
+  snvs <- c()
+  resHapRFN <- c()
+
   load(file = paste0(fileName, "_All", ".Rda"))
   load(file = "dups.Rda")
   
