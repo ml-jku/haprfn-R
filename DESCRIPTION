@@ -1,13 +1,16 @@
 Package: hapRFN
 Version: 0.0.1
 Date: 2017-04-08
-Title: hapRFN
-Author: Balazs Bencze <bencze.balazs@yahoo.com>,
-  Gundula Povysil <povysil@bioinf.jku.at>
-Maintainer: Balazs Becze <bencze.balazs@yahoo.com>
+Title: Identifying IBD Segments using Rectified Factor Networks
+Authors@R: c(person("Balazs", "Bencze", role = c("aut", "cre"),
+                     email = "bencze.balazs@yahoo.com"),
+             person("Sepp", "Hochreiter", role = "aut"),
+             person("Gundula", "Povysil", role = "ths"))
+Imports: hapFabia
 Depends: R (>= 3.1.0), Rhtslib, RFN
 LinkingTo: Rhtslib
-Description: A (one paragraph) description of what
-  the package does and why it may be useful.
-License: GPL (>= 2)
+Description: Used for analyzing variant call files (VCF) 
+  for finding short identity by descent (IBD) segments. This
+  is achieved using Rectified Factor Networks (RFNs).
+License: GPL (>= 2) | file LICENSE
 Suggests: testthat
