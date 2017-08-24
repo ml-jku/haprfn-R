@@ -21,6 +21,9 @@ features are skipped between intervals. Default value = 5000.}
 \item{intervalSize}{Size of the interval of each split.
 Default value = 10000.}
 }
+\value{
+None
+}
 \description{
 
 }

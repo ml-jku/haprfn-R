@@ -124,6 +124,9 @@ Default = FALSE.}
 \item{gpuId}{the ID of the GPU. This is used, when useGpu is TRUE.
 Default = -1 (invalid GPU ID).}
 }
+\value{
+None
+}
 \description{
 Iterate over intervals and run hapRFN.
 }

@@ -71,6 +71,9 @@ extension will be appended to this file. Default is the input file name.}
 \item{outputPrefixPath}{The path to the output file.
 Default is the \code{prefixPath}.}
 }
+\value{
+None
+}
 \description{
 \code{vcf2sparse} converts and splits VCF files into sparse matrices.
 }

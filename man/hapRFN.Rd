@@ -119,6 +119,9 @@ features are skipped between intervals. Default value = 5000.}
 
 \item{prange}{For intervals indicates its range.}
 }
+\value{
+None
+}
 \description{
 Identifying short IBD segments using RFNs.
 }
