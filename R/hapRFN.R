@@ -224,6 +224,10 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @return NULL
 #'
 #' @export
+#' @importFrom stats pbinom cutree
+#' @importFrom methods new
+#' @importFrom utils read.table
+#'
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
   labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
@@ -566,6 +570,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #' @export
 identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
   labelsA <- c()
+  snvs <- c()
+  resHapRFN <- c()
 
   # loads nsamples and snvs
   load(file = paste(fileName, "_All", ".Rda",sep=""))
