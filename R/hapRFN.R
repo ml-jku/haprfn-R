@@ -24,7 +24,7 @@
 #'   \item{nsL}{Vector of feature length containing number of samples having
 #'     a non-zero feature value.}
 #'
-#' @template seealso
+#' @template ref-fabia
 #'
 #' @export
 samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
@@ -61,7 +61,7 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'
 #' @return Data matrix of given samples
 #'
-#' @template seealso
+#' @template ref-fabia
 #'
 #' @export
 readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
