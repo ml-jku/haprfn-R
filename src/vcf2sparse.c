@@ -56,12 +56,6 @@ void matrix_destroy(sparse_matrix_t* matrix) {
  * File operations
  ****/
 
-
-static const char AnnotationPostfix[] = "_annot.txt";
-static const char IndividualsPostfix[] = "_individuals.txt";
-static const char InfoPostfix[] = "_info.txt";
-static const char GenotypeMatrixPostfix[] = "_matG.txt";
-static const char HaplotypeMatrixPostfix[] = "_matH.txt";
 static const char VcfGzPostfix[] = ".vcf.gz";
 static const char VcfPostfix[] = ".vcf";
 static const size_t IgnoreInterval = -1;
@@ -96,8 +90,8 @@ FILE* open_file(const char *file_name, const char *prefix, const char *postfix, 
   return file;
 }
 
-void write_to_annotation_file(const char *file_name, const char *prefix, const char *string, const size_t lower_interval, const size_t upper_interval) {
-  FILE *file = open_file(file_name, prefix, AnnotationPostfix, lower_interval, upper_interval);
+void write_to_annotation_file(const char *file_name, const char *prefix, const char *postix, const char *string, const size_t lower_interval, const size_t upper_interval) {
+  FILE *file = open_file(file_name, prefix, postix, lower_interval, upper_interval);
   if (!file) {
     REprintf("Cannot write annotation file for interval %zd-%zd\n", lower_interval, upper_interval);
     return;
@@ -236,7 +230,10 @@ void print_bcf_error(bcf1_t *bcf, const char *error_message, const char *solutio
   REprintf("\tAborting.\n");
 }
 
-void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS, SEXP annotateS, SEXP genotypesS, SEXP haplotypesS, SEXP missing_valuesS, SEXP output_fileS, SEXP output_prefixS) {
+void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP shift_sizeS,
+    SEXP annotateS, SEXP genotypesS, SEXP haplotypesS, SEXP missing_valuesS,
+    SEXP annotation_postfixS, SEXP genotypes_postfixS, SEXP haplotypes_postfixS, SEXP info_postfixS,
+    SEXP individuals_postfixS, SEXP output_fileS, SEXP output_prefixS) {
   const char *file_name = CHAR(STRING_ELT(file_nameS, 0));
   const char *prefix_path = isNull(prefix_pathS) ? "" : CHAR(STRING_ELT(prefix_pathS, 0));
   const char *output_file = isNull(output_fileS) ? file_name : CHAR(STRING_ELT(output_fileS, 0));
@@ -247,6 +244,12 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   const size_t interval_size = INTEGER(interval_sizeS)[0];
   const size_t shift_size = INTEGER(shift_sizeS)[0];
   const missing_t missing_values = (missing_t) INTEGER(missing_valuesS)[0];
+
+  const char *annotation_postfix = isNull(annotation_postfixS) ? "" : CHAR(STRING_ELT(annotation_postfixS, 0));
+  const char *genotypes_postfix = isNull(genotypes_postfixS) ? "" : CHAR(STRING_ELT(genotypes_postfixS, 0));
+  const char *haplotypes_postfix = isNull(haplotypes_postfixS) ? "" : CHAR(STRING_ELT(haplotypes_postfixS, 0));
+  const char *info_postfix = isNull(info_postfixS) ? "" : CHAR(STRING_ELT(info_postfixS, 0));
+  const char *individuals_postfix = isNull(individuals_postfixS) ? "" : CHAR(STRING_ELT(individuals_postfixS, 0));
 
   htsFile *file = NULL;
   bcf_hdr_t *hdr = NULL;
@@ -281,7 +284,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   }
 
   // Print _individuals.txt
-  individuals_file = open_file(output_file, output_prefix, IndividualsPostfix, IgnoreInterval, IgnoreInterval);
+  individuals_file = open_file(output_file, output_prefix, individuals_postfix, IgnoreInterval, IgnoreInterval);
   if (!individuals_file) {
     REprintf("Could not open individuals file for writing!\n");
     goto cleanup;
@@ -476,11 +479,11 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       flip_matrix(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
       size_t lower_interval = n_interval * shift_size;
       if (haplotypes) {
-        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, output_file, output_prefix, HaplotypeMatrixPostfix, lower_interval, lower_interval + interval_size);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY, output_file, output_prefix, haplotypes_postfix, lower_interval, lower_interval + interval_size);
       }
       if (genotypes) {
         haplotypes_to_genotypes(current_matrix, current_nnz, interval_size, nsamp * MAX_PLOIDY);
-        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp, output_file, output_prefix, GenotypeMatrixPostfix, lower_interval, lower_interval + interval_size);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, interval_size, nsamp, output_file, output_prefix, genotypes_postfix, lower_interval, lower_interval + interval_size);
       }
 
       tmpm = current_matrix;
@@ -494,7 +497,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
       set_zerov(next_nnz, interval_size);
 
       if (annotate) {
-        write_to_annotation_file(output_file, output_prefix, current_buffer->s, lower_interval, lower_interval + interval_size);
+        write_to_annotation_file(output_file, output_prefix, annotation_postfix, current_buffer->s, lower_interval, lower_interval + interval_size);
 
         tmps = current_buffer;
         current_buffer = next_buffer;
@@ -521,19 +524,19 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 
       size_t lower_interval = n_interval * shift_size;
       if (haplotypes) {
-        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, output_file, output_prefix, HaplotypeMatrixPostfix, lower_interval, lower_interval + current_interval);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY, output_file, output_prefix, haplotypes_postfix, lower_interval, lower_interval + current_interval);
       }
       if (genotypes) {
         haplotypes_to_genotypes(current_matrix, current_nnz, current_interval, nsamp * MAX_PLOIDY);
-        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp, output_file, output_prefix, GenotypeMatrixPostfix, lower_interval, lower_interval + current_interval);
+        write_dense_matrices_as_sparse(current_matrix, current_nnz, current_interval, nsamp, output_file, output_prefix, genotypes_postfix, lower_interval, lower_interval + current_interval);
       }
 
       if (annotate) {
-        write_to_annotation_file(output_file, output_prefix, current_buffer->s, lower_interval, lower_interval + current_interval);  
+        write_to_annotation_file(output_file, output_prefix, annotation_postfix, current_buffer->s, lower_interval, lower_interval + current_interval);  
       }
   }
 
-  FILE *info = open_file(output_file, output_prefix, InfoPostfix, IgnoreInterval, IgnoreInterval);
+  FILE *info = open_file(output_file, output_prefix, info_postfix, IgnoreInterval, IgnoreInterval);
   if (!info) {
     REprintf("Cannot write to info file!\n");
   } else {
