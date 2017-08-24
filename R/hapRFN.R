@@ -219,7 +219,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @template param-samples
 #' @template param-rfn
 #'
-#' @seealso RFN, hapRFN papers
+#' @template ref-rfn
 #'
 #' @return NULL
 #'

@@ -126,6 +126,15 @@ Identifying short IBD segments using RFNs.
 Identifying short identity by descent (IBD) segments using Rectified
   Factor Networks (RFNs).
 }
+\references{
+D. Clevert et al.,
+  \sQuote{Rectified Factor Networks},
+  CoRR, 2015 , abs/1502.06464.
+
+  D. Clevert et al.,
+  \sQuote{Rectified Factor Networks for Biclustering}
+  Proceedings ICLR 2016, 2016
+}
 \seealso{
-RFN, hapRFN papers
+\code{\link{RFN}}
 }
