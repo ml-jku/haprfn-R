@@ -34,6 +34,8 @@ Default value = "_info.txt".}
 
 \item{labelsA}{Individual names as matrix individuals x 4.}
 
+\item{pRange}{For intervals indicates its range.}
+
 \item{samples}{Vector of samples using one-based indexing,
 representing the samples that are read. Zero means read all samples.
 Default = 0.}
@@ -109,8 +111,6 @@ Default = FALSE.}
 
 \item{gpuId}{the ID of the GPU. This is used, when useGpu is TRUE.
 Default = -1 (invalid GPU ID).}
-
-\item{prange}{For intervals indicates its range.}
 }
 \value{
 None

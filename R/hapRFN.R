@@ -215,7 +215,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @param fileName The base name of the input file.
 #' @template param-in-file
 #' @param labelsA Individual names as matrix individuals x 4.
-#' @param prange For intervals indicates its range.
+#' @param pRange For intervals indicates its range.
 #' @template param-samples
 #' @template param-rfn
 #'
