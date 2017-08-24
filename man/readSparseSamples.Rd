@@ -45,12 +45,3 @@ Sparse matrix format where rows are as follows:
   \item values, the list of non-zero elements
 }
 }
-\references{
-S. Hochreiter et al.,
-  \sQuote{FABIA: Factor Analysis for Bicluster Acquisition},
-  Bioinformatics 26(12):1520-1527, 2010.
-  http://bioinformatics.oxfordjournals.org/cgi/content/abstract/btq227
-}
-\seealso{
-\code{\link{fabia}}
-}

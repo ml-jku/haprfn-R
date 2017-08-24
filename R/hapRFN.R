@@ -24,9 +24,8 @@
 #'   \item{nsL}{Vector of feature length containing number of samples having
 #'     a non-zero feature value.}
 #'
-#' @template ref-fabia
-#'
 #' @export
+#'
 samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing.")
@@ -61,9 +60,8 @@ samplesPerFeature <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'
 #' @return Data matrix of given samples
 #'
-#' @template ref-fabia
-#'
 #' @export
+#'
 readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
   if (missing(X)) {
     stop("Data file name missing. Stopped.")
