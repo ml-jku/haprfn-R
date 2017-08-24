@@ -110,13 +110,6 @@ Default = FALSE.}
 \item{gpuId}{the ID of the GPU. This is used, when useGpu is TRUE.
 Default = -1 (invalid GPU ID).}
 
-\item{intervalSize}{Size of the interval of each split.
-Default value = 10000.}
-
-\item{shiftSize}{Size of the distance between the beginning of the
-intervals. Should be smaller than the interval size, otherwise
-features are skipped between intervals. Default value = 5000.}
-
 \item{prange}{For intervals indicates its range.}
 }
 \value{

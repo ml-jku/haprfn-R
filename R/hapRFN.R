@@ -89,6 +89,7 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #' @param fileName The name of the input VCF file without the extension. The extension must 
 #'   be one of .vcf or .vcf.gz, and the format must match the extension. Required.
 #' @template param-in-file
+#' @template param-interval
 #' @param annotation TRUE to generate the annotation file for each interval.
 #'   Annotation file names end with \code{_annot.txt}. Default value = TRUE.
 #' @param haplotypes TRUE to generate the haplotype matrix for each interval.
@@ -145,6 +146,7 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #' @param endRun The index of the last interval. Required.
 #' @param fileName The base name of the input file. Required.
 #' @template param-in-file
+#' @template param-interval
 #' @template param-samples
 #' @template param-rfn
 #' @param saveAsCsv Save merged IBD segment list as CSV file
@@ -563,11 +565,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #' @param fileName The name of the Rda result file.
 #' @param startRun The index of the first interval.
 #' @param endRun The index of the last interval. Required.
-#' @param shiftSize Size of the distance between the beginning of the
-#'   intervals. Should be smaller than the interval size, otherwise
-#'   features are skipped between intervals. Default value = 5000.
-#' @param intervalSize Size of the interval of each split.
-#'   Default value = 10000.
+#' @template param-interval
 #'
 #' @return None
 #'
@@ -704,11 +702,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #' @param fileName The name of the Rda result file.
 #' @param startRun The index of the first interval.
 #' @param endRun The index of the last interval. Required.
-#' @param shiftSize Size of the distance between the beginning of the
-#'   intervals. Should be smaller than the interval size, otherwise
-#'   features are skipped between intervals. Default value = 5000.
-#' @param intervalSize Size of the interval of each split.
-#'   Default value = 10000.
+#' @template param-interval
 #'
 #' @return A list with elements
 #'   \item{startRun}{The parameter startRun.}
