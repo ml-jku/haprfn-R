@@ -572,6 +572,7 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
   labelsA <- c()
   snvs <- c()
   resHapRFN <- c()
+  shift <- c()
 
   # loads nsamples and snvs
   load(file = paste(fileName, "_All", ".Rda",sep=""))
@@ -829,6 +830,7 @@ analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, sh
               avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
 }
 
+#' @importFrom stats setNames
 # Read info file and return a list with nsamples and nsnps
 .readInfo <- function(prefixPath, fileName, infoPostfix) {
   setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2, warn = FALSE))), c("nsamples", "nsnps"))
@@ -900,6 +902,7 @@ analyzeIBDsegments <- function(fileName, runIndex = "", startRun = 1, endRun, sh
   }
 }
 
+#' @importFrom Matrix sparseMatrix
 # Read sparse matrix from file
 .readSparseMatrix <- function(fileName) {
   con <- file(fileName, "r")
