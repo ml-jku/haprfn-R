@@ -188,15 +188,18 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
     pRange <- .createRangeStringx(start, end)
     
     resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
-      sparseMatrixPostfix = sparseMatrixPostfix, annotationPostfix = annotationPostfix, 
-      individualsPostfix = individualsPostfix, labelsA = labels, pRange = pRange, 
-      samples = samples, lowerBP = lowerBP, upperBP = upperBP, p = p, 
-      quant = quant, eps = eps, l1 = l1, alpha = alpha, cyc = cyc, non_negative = non_negative, 
-      write_file = write_file, norm = norm, lap = lap, IBDsegmentLength = IBDsegmentLength, 
-      Lt = Lt, Zt = Zt, thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, 
-      pMAF = pMAF, haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids, 
-      thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs, minIndivid = minIndivid, 
-      avSNVsDist = avSNVsDist, SNVclusterLength = SNVclusterLength, useGpu = useGpu, gpuId = gpuId)
+                        sparseMatrixPostfix = sparseMatrixPostfix,
+                        annotationPostfix = annotationPostfix,
+                        individualsPostfix = individualsPostfix, labelsA = labels, pRange = pRange,
+                        samples = samples, lowerBP = lowerBP, upperBP = upperBP, p = p,
+                        quant = quant, eps = eps, l1 = l1, alpha = alpha, cyc = cyc,
+                        non_negative = non_negative, write_file = write_file, norm = norm,
+                        lap = lap, IBDsegmentLength = IBDsegmentLength, Lt = Lt, Zt = Zt,
+                        thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, pMAF = pMAF,
+                        haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids,
+                        thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs,
+                        minIndivid = minIndivid, avSNVsDist = avSNVsDist,
+                        SNVclusterLength = SNVclusterLength, useGpu = useGpu, gpuId = gpuId)
     
     if (saveAsCsv) {
       IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))  
@@ -337,8 +340,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   lowerBindivid = max(1.5, lowerBP * individualsN)  # remove private SNVs
   
   kk <- 1
-  while ((snvs/inteA) * choose(individualsN, 2) * (1 - pbinom(kk, inteA, pMAF * 
-      pMAF)) > thresCount) {
+  while ((snvs/inteA) * choose(individualsN, 2) * (1 - pbinom(kk, inteA, pMAF * pMAF)) > thresCount) {
     kk <- kk + 1
   }
   
@@ -374,8 +376,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     X[com + 1, ] <- 0
   }
   
-  rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = 0.1, etaP = 0.1, 
-    minP = 0.01, l1_weightdecay = l1, seed = 0, use_gpu = useGpu, gpu_id = gpuId)
+  rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = 0.1, etaP = 0.1, minP = 0.01, 
+                       l1_weightdecay = l1, seed = 0, use_gpu = useGpu, gpu_id = gpuId)
   
   myL = rfn_res$W
   myPsi = as.vector(rfn_res$P)
@@ -404,15 +406,16 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   avini <- as.vector(1)
   xavini <- as.vector(1)
   
-  res <- new("Factorization", parameters = list("rfn", cyc, p), n = n, p1 = p, 
-    p2 = p, l = l, center = as.vector(1), scaleData = as.vector(1), X = as.matrix(1), 
-    L = noL, Z = nZ, M = as.matrix(1), LZ = as.matrix(1), U = as.matrix(1), avini = avini, 
-    xavini = xavini, ini = ini, Psi = myPsi, lapla = mylapla)
+  res <- new("Factorization", parameters = list("rfn", cyc, p), n = n, p1 = p, p2 = p, l = l,
+             center = as.vector(1), scaleData = as.vector(1), X = as.matrix(1), L = noL, Z = nZ,
+             M = as.matrix(1), LZ = as.matrix(1), U = as.matrix(1), avini = avini, xavini = xavini,
+             ini = ini, Psi = myPsi, lapla = mylapla)
   
   # Load individuals to Ls of interest: load minor alleles of the Ls
   
-  sPF <- hapRFN::samplesPerFeature(X = paste(prefixPath, fileName, pRange, sparseMatrixPostfix, sep = ""), 
-                           samples = samples, lowerB = lowerBindivid, upperB = upperBindivid)
+  sPF <- hapRFN::samplesPerFeature(X = paste0(prefixPath, fileName, pRange, sparseMatrixPostfix), 
+                                   samples = samples, lowerB = lowerBindivid,
+                                   upperB = upperBindivid)
 
   if (nchar(annotationPostfix) > 0) {
     # annot[[1]] <- chromosome annot[[2]] <- phys. position annot[[3]] <- snvNames
@@ -421,8 +424,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     # annot[[10]] <- frequency annot[[11]] <- 1 = changed if major allele is actually
     # minor allele otherwise 0
     
-    annot <- read.table(paste(prefixPath, fileName, pRange, annotationPostfix, sep = ""), 
-      header = FALSE, sep = "\t", quote = "", as.is = TRUE, skip = 2)
+    annot <- read.table(paste0(prefixPath, fileName, pRange, annotationPostfix), header = FALSE, 
+                        sep = "\t", quote = "", as.is = TRUE, skip = 2)
     
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub(",", ";", annot[[i]])
@@ -438,8 +441,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   }
   
   if (is.null(labelsA)) {
-    labelsAA <- read.table(paste(prefixPath, fileName, individualsPostfix, sep = ""), 
-      header = FALSE, sep = " ", quote = "", as.is = TRUE)
+    labelsAA <- read.table(paste0(prefixPath, fileName, individualsPostfix), header = FALSE,
+                           sep = " ", quote = "", as.is = TRUE)
     if (haplotypes) {
       lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
     } else {
@@ -469,21 +472,23 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   # first haplotype extraction with offset 0
   
   off1 <- 0
-  IBDsegmentList1 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
-    labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA, thresA = thresA, mintagSNVs = mintagSNVs, 
-    off = off1, procMinIndivids = procMinIndivids, thresPrune = thresPrune)
+  IBDsegmentList1 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "",
+                                        labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA,
+                                        thresA = thresA, mintagSNVs = mintagSNVs, off = off1,
+                                        procMinIndivids = procMinIndivids, thresPrune = thresPrune)
   
   # merge IBD segment lists
   
   if (lengthList(IBDsegmentList1) > 1) {
     comp <- compareIBDsegmentLists(IBDsegmentList1 = IBDsegmentList1, IBDsegmentList2 = NULL, 
-      simv = simv, pTagSNVs = NULL, pIndivid = NULL, minTagSNVs = minTagSNVs, 
-      minIndivid = minIndivid)
+                                   simv = simv, pTagSNVs = NULL, pIndivid = NULL,
+                                   minTagSNVs = minTagSNVs, minIndivid = minIndivid)
     
     if (!is.null(comp)) {
       clustIBDsegmentList <- cutree(comp, h = cut)
       mergedIBDsegmentList1 <- mergeIBDsegmentLists(IBDsegmentList1 = IBDsegmentList1, 
-        IBDsegmentList2 = NULL, clustIBDsegmentList = clustIBDsegmentList)
+                                                    IBDsegmentList2 = NULL,
+                                                    clustIBDsegmentList = clustIBDsegmentList)
     } else {
       mergedIBDsegmentList1 <- IBDsegmentList1
     }
@@ -497,20 +502,22 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   off2 = inteA %/% 2
   
   IBDsegmentList2 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
-    labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA, thresA = thresA, mintagSNVs = mintagSNVs, 
-    off = off2, procMinIndivids = procMinIndivids, thresPrune = thresPrune)
+                                        labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA,
+                                        thresA = thresA, mintagSNVs = mintagSNVs, off = off2,
+                                        procMinIndivids = procMinIndivids, thresPrune = thresPrune)
   
   # merge IBD segments
   
   if (lengthList(IBDsegmentList2) > 1) {
-    comp <- compareIBDsegmentLists(IBDsegmentList1 = IBDsegmentList2, IBDsegmentList2 = NULL, 
-      simv = simv, pTagSNVs = NULL, pIndivid = NULL, minTagSNVs = minTagSNVs, 
-      minIndivid = minIndivid)
+    comp <- compareIBDsegmentLists(IBDsegmentList1 = IBDsegmentList2, IBDsegmentList2 = NULL,
+                                   simv = simv, pTagSNVs = NULL, pIndivid = NULL,
+                                   minTagSNVs = minTagSNVs, minIndivid = minIndivid)
     
     if (!is.null(comp)) {
       clustIBDsegmentList <- cutree(comp, h = cut)
       mergedIBDsegmentList2 <- mergeIBDsegmentLists(IBDsegmentList1 = IBDsegmentList2, 
-        IBDsegmentList2 = NULL, clustIBDsegmentList = clustIBDsegmentList)
+                                                    IBDsegmentList2 = NULL,
+                                                    clustIBDsegmentList = clustIBDsegmentList)
     } else {
       mergedIBDsegmentList2 <- IBDsegmentList2
     }
@@ -528,7 +535,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
       if (!is.null(comp12)) {
         clustIBDsegmentList <- cutree(comp12, h = cut)
         mergedIBDsegmentList <- mergeIBDsegmentLists(IBDsegmentList1 = mergedIBDsegmentList1, 
-          IBDsegmentList2 = mergedIBDsegmentList2, clustIBDsegmentList = clustIBDsegmentList)
+                                                     IBDsegmentList2 = mergedIBDsegmentList2,
+                                                     clustIBDsegmentList = clustIBDsegmentList)
       } else {
         mergedIBDsegmentList <- mergedIBDsegmentList1
       }
@@ -547,11 +555,11 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   mergedIBDsegmentList2 <- setStatistics(mergedIBDsegmentList2)
   mergedIBDsegmentList <- setStatistics(mergedIBDsegmentList)
   
-  # save(mergedIBDsegmentList,res,sPF,annot,IBDsegmentList1,IBDsegmentList2,mergedIBDsegmentList1,mergedIBDsegmentList2,file=paste(fileName,pRange,'_IBDsegmentList.Rda',sep=''))
   
-  return(list(mergedIBDsegmentList = mergedIBDsegmentList, res = res, sPF = sPF, 
-    annot = annot, IBDsegmentList1 = IBDsegmentList1, IBDsegmentList2 = IBDsegmentList2, 
-    mergedIBDsegmentList1 = mergedIBDsegmentList1, mergedIBDsegmentList2 = mergedIBDsegmentList2))
+  return(list(mergedIBDsegmentList = mergedIBDsegmentList, res = res, sPF = sPF, annot = annot,
+              IBDsegmentList1 = IBDsegmentList1, IBDsegmentList2 = IBDsegmentList2,
+              mergedIBDsegmentList1 = mergedIBDsegmentList1,
+              mergedIBDsegmentList2 = mergedIBDsegmentList2))
 }
 
 #' @title Identify duplicates.
@@ -605,8 +613,10 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
     if (noIBDsegments > 0) {
       count <- count + noIBDsegments
       
-      avIBDsegmentPos[[posAll]] <- sapply(IBDsegments(mergedIBDsegmentList), function(x) {IBDsegmentPos(x)}, simplify=FALSE)
-      avIBDsegmentLength[[posAll]] <- sapply(IBDsegments(mergedIBDsegmentList), function(x) {IBDsegmentLength(x)}, simplify=FALSE)
+      avIBDsegmentPos[[posAll]] <- sapply(IBDsegments(mergedIBDsegmentList),
+                                          function(x) {IBDsegmentPos(x)}, simplify=FALSE)
+      avIBDsegmentLength[[posAll]] <- sapply(IBDsegments(mergedIBDsegmentList),
+                                             function(x) {IBDsegmentLength(x)}, simplify=FALSE)
     }
   }
 
@@ -802,7 +812,8 @@ analyzeIBDsegments <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
           
           avIBDsegmentPos <- c(avIBDsegmentPos, IBDsegmentPos(vt))
           avIBDsegmentLengthSNV <- c(avIBDsegmentLengthSNV, IBDsegmentLength(vt))
-          avIBDsegmentLength <- c(avIBDsegmentLength, (max(tagSNVPositions(vt)) - min(tagSNVPositions(vt))))
+          avIBDsegmentLength <- c(avIBDsegmentLength,
+                                  max(tagSNVPositions(vt)) - min(tagSNVPositions(vt)))
           avnoIndivid <- c(avnoIndivid, numberIndividuals(vt))
           avnoTagSNVs <- c(avnoTagSNVs, numbertagSNVs(vt))
           
@@ -842,18 +853,22 @@ analyzeIBDsegments <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
               avIBDsegmentPos = avIBDsegmentPos, avIBDsegmentLengthSNV = avIBDsegmentLengthSNV,
               avIBDsegmentLength = avIBDsegmentLength, avnoIndivid = avnoIndivid,
               avnoTagSNVs = avnoTagSNVs, avnoFreq = avnoFreq, avnoGroupFreq = avnoGroupFreq,
-              avnotagSNVChange = avnotagSNVChange, avnotagSNVsPerIndividual = avnotagSNVsPerIndividual,
-              avnoindividualPerTagSNV = avnoindividualPerTagSNV, avIBDsegmentPosS = avIBDsegmentPosS,
-              avIBDsegmentLengthSNVS = avIBDsegmentLengthSNVS, avIBDsegmentLengthS = avIBDsegmentLengthS,
-              avnoIndividS = avnoIndividS, avnoTagSNVsS = avnoTagSNVsS, avnoFreqS = avnoFreqS,
-              avnoGroupFreqS = avnoGroupFreqS, avnotagSNVChangeS = avnotagSNVChangeS,
-              avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
+              avnotagSNVChange = avnotagSNVChange, 
+              avnotagSNVsPerIndividual = avnotagSNVsPerIndividual,
+              avnoindividualPerTagSNV = avnoindividualPerTagSNV,
+              avIBDsegmentPosS = avIBDsegmentPosS, avIBDsegmentLengthSNVS = avIBDsegmentLengthSNVS,
+              avIBDsegmentLengthS = avIBDsegmentLengthS, avnoIndividS = avnoIndividS,
+              avnoTagSNVsS = avnoTagSNVsS, avnoFreqS = avnoFreqS, avnoGroupFreqS = avnoGroupFreqS,
+              avnotagSNVChangeS = avnotagSNVChangeS,
+              avnotagSNVsPerIndividualS = avnotagSNVsPerIndividualS,
+              avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
 }
 
 #' @importFrom stats setNames
 # Read info file and return a list with nsamples and nsnps
 .readInfo <- function(prefixPath, fileName, infoPostfix) {
-  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2, warn = FALSE))), c("nsamples", "nsnps"))
+  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2,
+                                        warn = FALSE))), c("nsamples", "nsnps"))
 }
 
 # Read individuals file
@@ -863,7 +878,8 @@ analyzeIBDsegments <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 }
 
 # Read individuals file
-.readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples) {
+.readLabels <- function(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes,
+                        nsamples) {
   maxcol <- 4
   labels <- c()
   # If there is no annotation file
@@ -889,7 +905,8 @@ analyzeIBDsegments <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 
     # try to load without tabs
     if (colnum < maxcol) {
-      annotations_space <- read.table(annotationFile, header = FALSE, sep = " ", quote = "", as.is = TRUE)
+      annotations_space <- read.table(annotationFile, header = FALSE, sep = " ", quote = "",
+                                      as.is = TRUE)
       if (ncol(annotations_space) > colnum) {
         annotations <- annotations_space
         colnum <- ncol(annotations_space)
