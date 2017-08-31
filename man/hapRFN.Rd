@@ -7,11 +7,11 @@
 hapRFN(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
   infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
-  lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, quant = 0.01,
-  eps = 1e-05, l1 = 0, alpha = 0.03, cyc = 50, non_negative = 1,
-  write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50,
-  Lt = 0.1, Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4,
-  pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
+  lowerBP = 0, upperBP = 0.05, p = 10, quant = 0.01, eps = 1e-05,
+  l1 = 0, alpha = 0.03, cyc = 50, non_negative = 1, write_file = 0,
+  norm = 0, lap = 100, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2,
+  thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
+  haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
   thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2,
   avSNVsDist = 100, SNVclusterLength = 100, useGpu = FALSE, gpuId = -1)
 }
@@ -48,8 +48,6 @@ Default = 0.0.}
 Default = 0.05.}
 
 \item{p}{Number of biclusters per iteration. Default = 10.}
-
-\item{iter}{Number iterations. Default = 40.}
 
 \item{quant}{Percentage of Ls to remove in each iteration.}
 

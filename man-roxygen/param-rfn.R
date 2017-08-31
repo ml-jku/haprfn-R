@@ -6,7 +6,6 @@
 #' @param upperBP Upper bound for filtering the inputs columns, minimal MAF.
 #'   Default = 0.05.
 #' @param p Number of biclusters per iteration. Default = 10.
-#' @param iter Number iterations. Default = 40.
 #' @param quant Percentage of Ls to remove in each iteration.
 #' @param eps Lower bound for variational parameter lapla. Default = 1e-5.
 #' @param l1 l1 weight decay. Default = 0.0. 
