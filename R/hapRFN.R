@@ -157,16 +157,17 @@ vcf2sparse <- function(fileName, prefixPath = NULL, intervalSize = 10000, shiftS
 #'
 #' @export
 iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000, 
-  annotationFile = NULL, fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
-  annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", 
-  infoPostfix = "_info.txt", samples = 0, l1 = 0.0,
-  lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, quant = 0.01, eps = 1e-05, alpha = 0.03, 
-  cyc = 50, non_negative = 1, write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50, 
-  Lt = 0.1, Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03, 
-  haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", 
-  minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE,
-  useGpu = TRUE, gpuId = 0) {
-
+                             annotationFile = NULL, fileName, prefixPath = "",
+                             sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
+                             individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
+                             samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
+                             quant = 0.01, eps = 1e-05, alpha = 0.03, cyc = 50, non_negative = 1,
+                             write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50, Lt = 0.1,
+                             Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
+                             haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
+                             thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2,
+                             avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE, 
+                             useGpu = TRUE, gpuId = 0) {
   info <- .readInfo(prefixPath, fileName, infoPostfix)
 
   nsamples <- info$nsamples
@@ -182,8 +183,9 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
       end <- snvs
     }
         
-    labels <- .readLabels(prefixPath, fileName, individualsPostfix, annotationFile, haplotypes, nsamples)
-    pRange <- .createRangeString(start, end)
+    labels <- .readLabels(prefixPath, fileName, individualsPostfix, 
+                          annotationFile, haplotypes, nsamples)
+    pRange <- .createRangeStringx(start, end)
     
     resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
       sparseMatrixPostfix = sparseMatrixPostfix, annotationPostfix = annotationPostfix, 
@@ -230,15 +232,16 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 #' @importFrom RFN train_rfn
 #' @importFrom methods new
 #'
-hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
-  annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
-  labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05, p = 10, iter = 40,
-  quant = 0.01, eps = 1e-05, l1 = 0.0, alpha = 0.03, cyc = 50, non_negative = 1, write_file = 0,
-  norm = 0, lap = 100, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05, 
-  mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1, 
-  thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100,
-  SNVclusterLength = 100, useGpu = FALSE, gpuId = -1) {
-  
+hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
+                   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
+                   infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
+                   lowerBP = 0, upperBP = 0.05, p = 10, iter = 40, quant = 0.01, eps = 1e-05,
+                   l1 = 0.0, alpha = 0.03, cyc = 50, non_negative = 1, write_file = 0, norm = 0,
+                   lap = 100, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
+                   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
+                   procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", minTagSNVs = 6,
+                   minIndivid = 2, avSNVsDist = 100,SNVclusterLength = 100, useGpu = FALSE,
+                   gpuId = -1) {
   message("                      ")
   message("                      ")
   message("Running hapRFN with:")
@@ -571,7 +574,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #' @return None
 #'
 #' @export
-identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
+identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000, 
+                               intervalSize = 10000) {
   labelsA <- c()
   snvs <- c()
   resHapRFN <- c()
@@ -737,7 +741,8 @@ identifyDuplicates <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   \code{\link{identifyDuplicates}}
 #' 
 #' @export
-analyzeIBDsegments <- function(fileName, startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000) {
+analyzeIBDsegments <- function(fileName, startRun = 1, endRun, shiftSize = 5000,
+                               intervalSize = 10000) {
   countsA2 <- c()
   mergedIBDsegmentList <- list()
   dups <- c()
