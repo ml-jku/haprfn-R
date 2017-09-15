@@ -47,7 +47,7 @@ Default = 0.0.}
 \item{upperBP}{Upper bound for filtering the inputs columns, minimal MAF.
 Default = 0.05.}
 
-\item{p}{Number of biclusters per iteration. Default = 10.}
+\item{p}{Number of hidden units (biclusters). Default = 10.}
 
 \item{quant}{Percentage of Ls to remove in each iteration.}
 
