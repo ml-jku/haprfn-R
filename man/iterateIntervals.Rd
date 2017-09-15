@@ -8,14 +8,14 @@ iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
   intervalSize = 10000, annotationFile = NULL, fileName, prefixPath = "",
   sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
   individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
-  samples = 0, l1 = 0, lowerBP = 0, upperBP = 0.05, p = 10,
-  quant = 0.01, eps = 1e-05, alpha = 0.03, cyc = 50, non_negative = 1,
-  write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50,
-  Lt = 0.1, Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4,
-  pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
-  thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2,
-  avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE,
-  useGpu = TRUE, gpuId = 0)
+  samples = 0, l1 = 0, lowerBP = 0, upperBP = 0.05, p = 50,
+  quant = 0.01, eps = 1e-05, alpha = 0.03, cyc = 100,
+  non_negative = 1, write_file = 0, norm = 0, lap = 100,
+  IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
+  mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
+  procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD",
+  minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100,
+  SNVclusterLength = 100, saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0)
 }
 \arguments{
 \item{startRun}{The index of the first interval.}
@@ -60,7 +60,7 @@ Default = 0.0.}
 \item{upperBP}{Upper bound for filtering the inputs columns, minimal MAF.
 Default = 0.05.}
 
-\item{p}{Number of hidden units (biclusters). Default = 10.}
+\item{p}{Number of hidden units (biclusters). Default = 50.}
 
 \item{quant}{Percentage of Ls to remove in each iteration.}
 
@@ -68,7 +68,7 @@ Default = 0.05.}
 
 \item{alpha}{Sparseness loadings. Default = 0.03.}
 
-\item{cyc}{Number of iterations. Default = 50.}
+\item{cyc}{Number of iterations. Default = 100.}
 
 \item{non_negative}{Non-negative factors and loadings if non_negative.
 Default = 1 (yes).}

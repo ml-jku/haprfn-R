@@ -5,12 +5,12 @@
 #'   Default = 0.0.
 #' @param upperBP Upper bound for filtering the inputs columns, minimal MAF.
 #'   Default = 0.05.
-#' @param p Number of hidden units (biclusters). Default = 10.
+#' @param p Number of hidden units (biclusters). Default = 50.
 #' @param quant Percentage of Ls to remove in each iteration.
 #' @param eps Lower bound for variational parameter lapla. Default = 1e-5.
 #' @param l1 l1 weight decay. Default = 0.0. 
 #' @param alpha Sparseness loadings. Default = 0.03.
-#' @param cyc Number of iterations. Default = 50.
+#' @param cyc Number of iterations. Default = 100.
 #' @param non_negative Non-negative factors and loadings if non_negative.
 #'   Default = 1 (yes).
 #' @param write_file Results are written to files (L in sparse format).
