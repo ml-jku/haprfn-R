@@ -425,7 +425,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     # minor allele otherwise 0
     
     annot <- read.table(paste0(prefixPath, fileName, pRange, annotationPostfix), header = FALSE, 
-                        sep = "\t", quote = "", as.is = TRUE, skip = 2)
+                        sep = "\t", quote = "", as.is = TRUE)
     
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub(",", ";", annot[[i]])
