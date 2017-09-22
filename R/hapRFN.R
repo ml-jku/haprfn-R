@@ -185,7 +185,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
         
     labels <- .readLabels(prefixPath, fileName, individualsPostfix, 
                           annotationFile, haplotypes, nsamples)
-    pRange <- .createRangeStringx(start, end)
+    pRange <- .createRangeString(start, end)
     
     resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
                         sparseMatrixPostfix = sparseMatrixPostfix,
