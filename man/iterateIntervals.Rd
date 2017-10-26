@@ -9,13 +9,13 @@ iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
   sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
   individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
   samples = 0, l1 = 0, lowerBP = 0, upperBP = 0.05, p = 50,
-  quant = 0.01, eps = 1e-05, alpha = 0.03, cyc = 100,
-  non_negative = 1, write_file = 0, norm = 0, lap = 100,
+  cyc = 100, etaW = 0.1, etaP = 0.1, minP = 0.01, write_file = 0,
   IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
   procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD",
   minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100,
-  SNVclusterLength = 100, saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0)
+  SNVclusterLength = 100, saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0,
+  seed = seed)
 }
 \arguments{
 \item{startRun}{The index of the first interval.}
@@ -62,23 +62,16 @@ Default = 0.05.}
 
 \item{p}{Number of hidden units (biclusters). Default = 50.}
 
-\item{quant}{Percentage of Ls to remove in each iteration.}
-
-\item{eps}{Lower bound for variational parameter lapla. Default = 1e-5.}
-
-\item{alpha}{Sparseness loadings. Default = 0.03.}
-
 \item{cyc}{Number of iterations. Default = 100.}
 
-\item{non_negative}{Non-negative factors and loadings if non_negative.
-Default = 1 (yes).}
+\item{etaW}{Learning rate of the W parameter}
+
+\item{etaP}{Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)}
+
+\item{minP}{Minimal value for Psi. Should be in 1e-5 - 1e-1}
 
 \item{write_file}{Results are written to files (L in sparse format).
 Default = 0 (not written).}
-
-\item{norm}{Data normalization. Default = 0 (no normalization).}
-
-\item{lap}{Minimal value of the variational parameter. Default = 100.0.}
 
 \item{IBDsegmentLength}{IBD segment length in kbp. Default = 50.}
 
@@ -123,6 +116,8 @@ Default = FALSE.}
 
 \item{gpuId}{the ID of the GPU. This is used, when useGpu is TRUE.
 Default = -1 (invalid GPU ID).}
+
+\item{seed}{random number generator seed for RFN}
 }
 \value{
 None

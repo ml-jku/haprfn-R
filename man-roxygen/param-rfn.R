@@ -38,3 +38,4 @@
 #' @param gpuId the ID of the GPU. This is used, when useGpu is TRUE.
 #'   Default = -1 (invalid GPU ID).
 #' @param seed random number generator seed for RFN
+
