@@ -161,13 +161,13 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                              sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
                              individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
                              samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 50,
-                             quant = 0.01, eps = 1e-05, alpha = 0.03, cyc = 100, non_negative = 1,
+                             cyc = 100, non_negative = 1, etaW = 0.1, etaP = 0.1, minP = 0.01,
                              write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50, Lt = 0.1,
                              Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
                              haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
                              thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2,
                              avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE, 
-                             useGpu = TRUE, gpuId = 0) {
+                             useGpu = TRUE, gpuId = 0, seed = seed) {
   info <- .readInfo(prefixPath, fileName, infoPostfix)
 
   nsamples <- info$nsamples
@@ -192,14 +192,15 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                         annotationPostfix = annotationPostfix,
                         individualsPostfix = individualsPostfix, labelsA = labels, pRange = pRange,
                         samples = samples, lowerBP = lowerBP, upperBP = upperBP, p = p,
-                        quant = quant, eps = eps, l1 = l1, alpha = alpha, cyc = cyc,
+                        l1 = l1, cyc = cyc, etaW = etaW, etaP = etaP, minP = minP,
                         non_negative = non_negative, write_file = write_file, norm = norm,
                         lap = lap, IBDsegmentLength = IBDsegmentLength, Lt = Lt, Zt = Zt,
                         thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, pMAF = pMAF,
                         haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids,
                         thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs,
                         minIndivid = minIndivid, avSNVsDist = avSNVsDist,
-                        SNVclusterLength = SNVclusterLength, useGpu = useGpu, gpuId = gpuId)
+                        SNVclusterLength = SNVclusterLength, useGpu = useGpu, gpuId = gpuId,
+                        seed = seed)
     
     if (saveAsCsv) {
       IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, paste0(fileName, pRange, ".csv"))  
@@ -238,13 +239,13 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
                    annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
                    infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
-                   lowerBP = 0, upperBP = 0.05, p = 50, quant = 0.01, eps = 1e-05,
-                   l1 = 0.0, alpha = 0.03, cyc = 100, non_negative = 1, write_file = 0, norm = 0,
+                   lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1, minP = 0.01,
+                   l1 = 0.0, cyc = 100, non_negative = 1, write_file = 0, norm = 0,
                    lap = 100, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
                    mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
                    procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", minTagSNVs = 6,
-                   minIndivid = 2, avSNVsDist = 100,SNVclusterLength = 100, useGpu = FALSE,
-                   gpuId = -1) {
+                   minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100, useGpu = FALSE,
+                   gpuId = -1, seed = 0) {
   message("                      ")
   message("                      ")
   message("Running hapRFN with:")
@@ -270,13 +271,13 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   }
   message("   Lower bound on MAF but more than one occurence -----: ", lowerBP)
   message("   Upper bound on MAF ---------------------------------: ", upperBP)
-  message("   Number of biclusters per iteration -----------------: ", p)
-  message("   Sparseness coefficient of the loadings -------------: ", alpha)
-  message("   Percentage of Ls to remove after each iteration ----: ", quant)
-  message("   Lower bound for variational parameter lapla --------: ", eps)
+  message("   Number of biclusters -------------------------------: ", p)
   message("   Number of cycles -----------------------------------: ", cyc)
   message("   Non-negative factors and loadings ------------------: ", non_negative)
   message("   Results written to files ---------------------------: ", write_file)
+  message("   Learning rate of the W parameter -------------------: ", etaW)
+  message("   Learning rate of the Psi parameter -----------------: ", etaP)
+  message("   Minimal value for Psi ------------------------------: ", minP)
   message("   Data normalized ------------------------------------: ", norm)
   message("   Minimal value of the variational parameter ---------: ", lap)
   if (IBDsegmentLength > 0) {
@@ -301,6 +302,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("   Similarity measure for merging clusters ------------: ", simv)
   message("   Minimum matching tagSNVs for cluster similarity ----: ", minTagSNVs)
   message("   Minimum matching individuals for cluster similarity : ", minIndivid)
+  message("   Seed -----------------------------------------------: ", seed)
   message("                      ")
   message("                      ")
   
@@ -363,8 +365,6 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   rowna <- rownames(X)
   colna <- colnames(X)
   
-  eps <- as.double(0.001)
-  eps1 <- as.double(1e-10)
   iin <- 1/l
   
   cyc <- as.integer(cyc)
@@ -376,8 +376,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     X[com + 1, ] <- 0
   }
   
-  rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = 0.1, etaP = 0.1, minP = 0.01, 
-                       l1_weightdecay = l1, seed = 0, use_gpu = useGpu, gpu_id = gpuId)
+  rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = etaW, etaP = etaP, minP = minP, 
+                       l1_weightdecay = l1, seed = seed, use_gpu = useGpu, gpu_id = gpuId)
   
   myL = rfn_res$W
   myPsi = as.vector(rfn_res$P)

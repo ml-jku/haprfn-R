@@ -6,11 +6,11 @@
 #' @param upperBP Upper bound for filtering the inputs columns, minimal MAF.
 #'   Default = 0.05.
 #' @param p Number of hidden units (biclusters). Default = 50.
-#' @param quant Percentage of Ls to remove in each iteration.
-#' @param eps Lower bound for variational parameter lapla. Default = 1e-5.
 #' @param l1 l1 weight decay. Default = 0.0. 
-#' @param alpha Sparseness loadings. Default = 0.03.
 #' @param cyc Number of iterations. Default = 100.
+#' @param etaW Learning rate of the W parameter
+#' @param etaP Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)
+#' @param minP Minimal value for Psi. Should be in 1e-5 - 1e-1
 #' @param non_negative Non-negative factors and loadings if non_negative.
 #'   Default = 1 (yes).
 #' @param write_file Results are written to files (L in sparse format).
@@ -41,3 +41,4 @@
 #'   Default = FALSE.
 #' @param gpuId the ID of the GPU. This is used, when useGpu is TRUE.
 #'   Default = -1 (invalid GPU ID).
+#' @param seed random number generator seed for RFN
