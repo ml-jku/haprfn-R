@@ -11,8 +11,6 @@
 #' @param etaW Learning rate of the W parameter
 #' @param etaP Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)
 #' @param minP Minimal value for Psi. Should be in 1e-5 - 1e-1
-#' @param non_negative Non-negative factors and loadings if non_negative.
-#'   Default = 1 (yes).
 #' @param write_file Results are written to files (L in sparse format).
 #'   Default = 0 (not written).
 #' @param norm Data normalization. Default = 0 (no normalization).

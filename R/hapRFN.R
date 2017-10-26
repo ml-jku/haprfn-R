@@ -161,7 +161,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                              sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
                              individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
                              samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 50,
-                             cyc = 100, non_negative = 1, etaW = 0.1, etaP = 0.1, minP = 0.01,
+                             cyc = 100, etaW = 0.1, etaP = 0.1, minP = 0.01,
                              write_file = 0, norm = 0, lap = 100, IBDsegmentLength = 50, Lt = 0.1,
                              Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
                              haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
@@ -193,7 +193,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                         individualsPostfix = individualsPostfix, labelsA = labels, pRange = pRange,
                         samples = samples, lowerBP = lowerBP, upperBP = upperBP, p = p,
                         l1 = l1, cyc = cyc, etaW = etaW, etaP = etaP, minP = minP,
-                        non_negative = non_negative, write_file = write_file, norm = norm,
+                        write_file = write_file, norm = norm,
                         lap = lap, IBDsegmentLength = IBDsegmentLength, Lt = Lt, Zt = Zt,
                         thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, pMAF = pMAF,
                         haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids,
@@ -240,7 +240,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
                    annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
                    infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
                    lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1, minP = 0.01,
-                   l1 = 0.0, cyc = 100, non_negative = 1, write_file = 0, norm = 0,
+                   l1 = 0.0, cyc = 100, write_file = 0, norm = 0,
                    lap = 100, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
                    mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
                    procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", minTagSNVs = 6,
@@ -273,7 +273,6 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("   Upper bound on MAF ---------------------------------: ", upperBP)
   message("   Number of biclusters -------------------------------: ", p)
   message("   Number of cycles -----------------------------------: ", cyc)
-  message("   Non-negative factors and loadings ------------------: ", non_negative)
   message("   Results written to files ---------------------------: ", write_file)
   message("   Learning rate of the W parameter -------------------: ", etaW)
   message("   Learning rate of the Psi parameter -----------------: ", etaP)
