@@ -13,8 +13,6 @@
 #' @param minP Minimal value for Psi. Should be in 1e-5 - 1e-1
 #' @param write_file Results are written to files (L in sparse format).
 #'   Default = 0 (not written).
-#' @param norm Data normalization. Default = 0 (no normalization).
-#' @param lap Minimal value of the variational parameter. Default = 100.0.
 #' @param IBDsegmentLength IBD segment length in kbp. Default = 50.
 #' @param Lt Percentage of largest Ls to consider for IBD segment extraction.
 #'   Default = 0.1.
