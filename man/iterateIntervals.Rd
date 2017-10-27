@@ -102,6 +102,8 @@ Default = FALSE.}
 
 \item{thresA}{Default = NULL.}
 
+\item{minTagSNVs}{Default = NULL.}
+
 \item{minIndivid}{Default = 2.}
 
 \item{avSNVsDist}{Default = 100.}
@@ -118,8 +120,6 @@ Default = FALSE.}
 Default = -1 (invalid GPU ID).}
 
 \item{seed}{random number generator seed for RFN}
-
-\item{mintagSNVs}{Default = NULL.}
 }
 \value{
 None

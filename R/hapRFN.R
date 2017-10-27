@@ -344,8 +344,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     thresA <- kk
   }
 
-  if (is.null(mintagSNVs)) {
-    mintagSNVs <- round(mintagSNVsFactor * thresA)
+  if (is.null(minTagSNVs)) {
+    minTagSNVs <- round(mintagSNVsFactor * thresA)
   }
   
   # End Compute internal parameters
@@ -473,7 +473,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   off1 <- 0
   IBDsegmentList1 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "",
                                         labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA,
-                                        thresA = thresA, mintagSNVs = mintagSNVs, off = off1,
+                                        thresA = thresA, mintagSNVs = minTagSNVs, off = off1,
                                         procMinIndivids = procMinIndivids, thresPrune = thresPrune)
   
   # merge IBD segment lists
@@ -502,7 +502,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   
   IBDsegmentList2 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
                                         labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA,
-                                        thresA = thresA, mintagSNVs = mintagSNVs, off = off2,
+                                        thresA = thresA, mintagSNVs = minTagSNVs, off = off2,
                                         procMinIndivids = procMinIndivids, thresPrune = thresPrune)
   
   # merge IBD segments

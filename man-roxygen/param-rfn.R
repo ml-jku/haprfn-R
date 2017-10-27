@@ -30,7 +30,7 @@
 #' @param thresPrune Default = 0.001.
 #' @param simv Default = "minD".
 #' @param thresA Default = NULL.
-#' @param mintagSNVs Default = NULL.
+#' @param minTagSNVs Default = NULL.
 #' @param minIndivid Default = 2.
 #' @param avSNVsDist Default = 100.
 #' @param SNVclusterLength Default = 100.
