@@ -165,7 +165,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                              write_file = 0, IBDsegmentLength = 50, Lt = 0.1,
                              Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
                              haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
-                             thresPrune = 0.001, simv = "minD", minTagSNVs = 6, minIndivid = 2,
+                             thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL, minIndivid = 2,
                              avSNVsDist = 100, SNVclusterLength = 100, saveAsCsv = FALSE, 
                              useGpu = TRUE, gpuId = 0, seed = seed) {
   info <- .readInfo(prefixPath, fileName, infoPostfix)
@@ -196,7 +196,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                         write_file = write_file, IBDsegmentLength = IBDsegmentLength, Lt = Lt, Zt = Zt,
                         thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, pMAF = pMAF,
                         haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids,
-                        thresPrune = thresPrune, simv = simv, minTagSNVs = minTagSNVs,
+                        thresPrune = thresPrune, simv = simv, thresA = thresA, minTagSNVs = minTagSNVs,
                         minIndivid = minIndivid, avSNVsDist = avSNVsDist,
                         SNVclusterLength = SNVclusterLength, useGpu = useGpu, gpuId = gpuId,
                         seed = seed)
@@ -241,7 +241,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
                    lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1, minP = 0.01,
                    l1 = 0.0, cyc = 100, write_file = 0, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
                    mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
-                   procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", minTagSNVs = 6,
+                   procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
                    minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100, useGpu = FALSE,
                    gpuId = -1, seed = 0) {
   message("                      ")
@@ -336,13 +336,17 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   upperBindivid = upperBP * individualsN  # remove common SNVs
   lowerBindivid = max(1.5, lowerBP * individualsN)  # remove private SNVs
   
-  kk <- 1
-  while ((snvs/inteA) * choose(individualsN, 2) * (1 - pbinom(kk, inteA, pMAF * pMAF)) > thresCount) {
-    kk <- kk + 1
+  if (is.null(thresA)) {
+    kk <- 1
+    while ((snvs/inteA) * choose(individualsN, 2) * (1 - pbinom(kk, inteA, pMAF * pMAF)) > thresCount) {
+      kk <- kk + 1
+    }
+    thresA <- kk
   }
-  
-  thresA <- kk
-  mintagSNVs <- round(mintagSNVsFactor * thresA)
+
+  if (is.null(mintagSNVs)) {
+    mintagSNVs <- round(mintagSNVsFactor * thresA)
+  }
   
   # End Compute internal parameters
   

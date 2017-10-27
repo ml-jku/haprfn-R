@@ -29,7 +29,8 @@
 #' @param procMinIndivids Default = 0.1.
 #' @param thresPrune Default = 0.001.
 #' @param simv Default = "minD".
-#' @param minTagSNVs Default = 6.
+#' @param thresA Default = NULL.
+#' @param mintagSNVs Default = NULL.
 #' @param minIndivid Default = 2.
 #' @param avSNVsDist Default = 100.
 #' @param SNVclusterLength Default = 100.

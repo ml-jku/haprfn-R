@@ -13,7 +13,7 @@ iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
   IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
   procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD",
-  minTagSNVs = 6, minIndivid = 2, avSNVsDist = 100,
+  thresA = NULL, minTagSNVs = NULL, minIndivid = 2, avSNVsDist = 100,
   SNVclusterLength = 100, saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0,
   seed = seed)
 }
@@ -100,7 +100,7 @@ Default = FALSE.}
 
 \item{simv}{Default = "minD".}
 
-\item{minTagSNVs}{Default = 6.}
+\item{thresA}{Default = NULL.}
 
 \item{minIndivid}{Default = 2.}
 
@@ -118,6 +118,8 @@ Default = FALSE.}
 Default = -1 (invalid GPU ID).}
 
 \item{seed}{random number generator seed for RFN}
+
+\item{mintagSNVs}{Default = NULL.}
 }
 \value{
 None
