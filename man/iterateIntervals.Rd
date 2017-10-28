@@ -9,13 +9,13 @@ iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
   sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
   individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
   samples = 0, l1 = 0, lowerBP = 0, upperBP = 0.05, p = 50,
-  cyc = 100, etaW = 0.1, etaP = 0.1, minP = 0.01, write_file = 0,
-  IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
-  mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
-  procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD",
-  thresA = NULL, minTagSNVs = NULL, minIndivid = 2, avSNVsDist = 100,
-  SNVclusterLength = 100, saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0,
-  seed = seed)
+  cyc = 100, etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0,
+  write_file = 0, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2,
+  thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
+  haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
+  thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
+  minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
+  saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed)
 }
 \arguments{
 \item{startRun}{The index of the first interval.}
@@ -69,6 +69,8 @@ Default = 0.05.}
 \item{etaP}{Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)}
 
 \item{minP}{Minimal value for Psi. Should be in 1e-5 - 1e-1}
+
+\item{dropout}{Dropout rate. Default = 0.0.}
 
 \item{write_file}{Results are written to files (L in sparse format).
 Default = 0 (not written).}

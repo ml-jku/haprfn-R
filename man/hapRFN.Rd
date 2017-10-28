@@ -8,7 +8,7 @@ hapRFN(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
   infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
   lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1,
-  minP = 0.01, l1 = 0, cyc = 100, write_file = 0,
+  minP = 0.01, dropout = 0, l1 = 0, cyc = 100, write_file = 0,
   IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
   procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD",
@@ -54,6 +54,8 @@ Default = 0.05.}
 \item{etaP}{Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)}
 
 \item{minP}{Minimal value for Psi. Should be in 1e-5 - 1e-1}
+
+\item{dropout}{Dropout rate. Default = 0.0.}
 
 \item{l1}{l1 weight decay. Default = 0.0.}
 

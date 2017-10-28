@@ -11,6 +11,7 @@
 #' @param etaW Learning rate of the W parameter
 #' @param etaP Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)
 #' @param minP Minimal value for Psi. Should be in 1e-5 - 1e-1
+#' @param dropout Dropout rate. Default = 0.0.
 #' @param write_file Results are written to files (L in sparse format).
 #'   Default = 0 (not written).
 #' @param IBDsegmentLength IBD segment length in kbp. Default = 50.
