@@ -161,7 +161,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                              sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
                              individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
                              samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 50,
-                             cyc = 100, etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0.0,
+                             cyc = 100, etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0.0, noise_type = "saltpepper",
                              write_file = 0, IBDsegmentLength = 50, Lt = 0.1,
                              Zt = 0.2, thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
                              haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
@@ -192,7 +192,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
                         annotationPostfix = annotationPostfix,
                         individualsPostfix = individualsPostfix, labelsA = labels, pRange = pRange,
                         samples = samples, lowerBP = lowerBP, upperBP = upperBP, p = p,
-                        l1 = l1, cyc = cyc, etaW = etaW, etaP = etaP, minP = minP, dropout = dropout,
+                        l1 = l1, cyc = cyc, etaW = etaW, etaP = etaP, minP = minP, dropout = dropout, noise_type = noise_type,
                         write_file = write_file, IBDsegmentLength = IBDsegmentLength, Lt = Lt, Zt = Zt,
                         thresCount = thresCount, mintagSNVsFactor = mintagSNVsFactor, pMAF = pMAF,
                         haplotypes = haplotypes, cut = cut, procMinIndivids = procMinIndivids,
@@ -238,7 +238,7 @@ iterateIntervals <- function(startRun = 1, endRun, shiftSize = 5000, intervalSiz
 hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt", 
                    annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
                    infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
-                   lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0.0,
+                   lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0.0, noise_type = "saltpepper",
                    l1 = 0.0, cyc = 100, write_file = 0, IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
                    mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
                    procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
@@ -375,7 +375,7 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     X[com + 1, ] <- 0
   }
   
-  rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = etaW, etaP = etaP, minP = minP, dropout_rate = dropout,
+  rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = etaW, etaP = etaP, minP = minP, dropout_rate = dropout, noise_type = noise_type,
                        l1_weightdecay = l1, seed = seed, use_gpu = useGpu, gpu_id = gpuId)
   
   myL = rfn_res$W
