@@ -15,10 +15,6 @@
 #' @param write_file Results are written to files (L in sparse format).
 #'   Default = 0 (not written).
 #' @param IBDsegmentLength IBD segment length in kbp. Default = 50.
-#' @param Lt Percentage of largest Ls to consider for IBD segment extraction.
-#'   Default = 0.1.
-#' @param Zt Percentage of largest Zs to consider for IBD segment extraction.
-#'   Default = 0.2.
 #' @param thresCount p-value of random histogram hit. Default = 1e-5.
 #' @param mintagSNVsFactor Percentage of segments overlap in IBD segments.
 #'   Use 1/2 for large to 3/4 for small intervals. Default = 3/4.

@@ -8,8 +8,8 @@ hapRFN(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
   infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
   lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1,
-  minP = 0.01, dropout = 0, l1 = 0, cyc = 100, write_file = 0,
-  IBDsegmentLength = 50, Lt = 0.1, Zt = 0.2, thresCount = 1e-05,
+  minP = 0.01, dropout = 0, noise_type = "saltpepper", l1 = 0,
+  cyc = 100, write_file = 0, IBDsegmentLength = 50, thresCount = 1e-05,
   mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
   procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD",
   thresA = NULL, minTagSNVs = NULL, minIndivid = 2, avSNVsDist = 100,
@@ -65,12 +65,6 @@ Default = 0.05.}
 Default = 0 (not written).}
 
 \item{IBDsegmentLength}{IBD segment length in kbp. Default = 50.}
-
-\item{Lt}{Percentage of largest Ls to consider for IBD segment extraction.
-Default = 0.1.}
-
-\item{Zt}{Percentage of largest Zs to consider for IBD segment extraction.
-Default = 0.2.}
 
 \item{thresCount}{p-value of random histogram hit. Default = 1e-5.}
 
