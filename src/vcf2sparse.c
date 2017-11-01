@@ -17,10 +17,7 @@ typedef enum {
   kAbort = 5
 } missing_t;
 
-inline void kstring_free(kstring_t* str) {
-  free(str->s);
-  free(str);
-}
+#define kstring_free(str) { free(str->s); free(str); }
 
 /****
  * Sparse matrix structure
