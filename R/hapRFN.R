@@ -81,8 +81,8 @@ readSparseSamples <- function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'   \code{vcf2sparse} converts and splits VCF files into sparse matrices.
 #'
 #' @details
-#'   Reads a VCF file, converts it into a sparse matrix format, splits it into intervals
-#'   and writes the result into files. It generates multiple files.
+#'   Reads a VCF file, converts it into a sparse matrix format, splits it into
+#'   intervals and writes the result into files. It generates multiple files.
 #'
 #'   The code is implemented in C.
 #'
@@ -349,8 +349,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("start RFN")
 
   # RFN call
-  l = ncol(X)
-  n = nrow(X)
+  l <- ncol(X)
+  n <- nrow(X)
   
   rownames(X) <- rownames(X, do.NULL = FALSE, prefix = "SNV")
   colnames(X) <- colnames(X, do.NULL = FALSE, prefix = "sample")
@@ -371,10 +371,10 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = etaW, etaP = etaP, minP = minP, dropout_rate = dropout, noise_type = noise_type,
                        l1_weightdecay = l1, seed = seed, use_gpu = useGpu, gpu_id = gpuId)
   
-  myL = rfn_res$W
-  myPsi = as.vector(rfn_res$P)
-  myZ = rfn_res$H
-  mylapla = as.matrix(1)
+  myL <- rfn_res$W
+  myPsi <- as.vector(rfn_res$P)
+  myZ <- rfn_res$H
+  mylapla <- as.matrix(1)
   
   vz <- iin * apply(myZ, 1, function(x) sum(x^2))
   vz <- sqrt(vz + 1e-10)
@@ -410,14 +410,21 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
                                    upperB = upperBindivid)
 
   if (nchar(annotationPostfix) > 0) {
-    # annot[[1]] <- chromosome annot[[2]] <- phys. position annot[[3]] <- snvNames
-    # annot[[4]] <- snvMajor annot[[5]] <- snvMinor annot[[6]] <- quality annot[[7]]
-    # <- pass annot[[8]] <- info of vcf file annot[[9]] <- fields in vcf file
-    # annot[[10]] <- frequency annot[[11]] <- 1 = changed if major allele is actually
-    # minor allele otherwise 0
+    # annot[[1]] <- chromosome
+    # annot[[2]] <- phys. position
+    # annot[[3]] <- snvNames
+    # annot[[4]] <- snvMajor 
+    # annot[[5]] <- snvMinor 
+    # annot[[6]] <- quality 
+    # annot[[7]] <- pass 
+    # annot[[8]] <- info of vcf file 
+    # annot[[9]] <- fields in vcf file
+    # annot[[10]] <- frequency 
+    # annot[[11]] <- 1 = changed if major allele is 
+    # actually minor allele otherwise 0
     
-    annot <- read.table(paste0(prefixPath, fileName, pRange, annotationPostfix), header = FALSE, 
-                        sep = "\t", quote = "", as.is = TRUE)
+    annot <- read.table(paste0(prefixPath, fileName, pRange, annotationPostfix), 
+                        header = FALSE, sep = "\t", quote = "", as.is = TRUE)
     
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub(",", ";", annot[[i]])
@@ -444,24 +451,8 @@ hapRFN <- function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   } else {
     indiA <- labelsA
   }
-  
-  # Here other labels might be possible: labelsA[,i]: 1=id 2=subPopulation
-  # 3=population 4 = platform
-  
-  # indit <- read.table('phase1_integrated_calls.20101123.ALL.panel', header =
-  # FALSE, sep = '\t', quote = '',as.is=TRUE) indi1 <-
-  # as.vector(unlist(rbind(indit[,1],indit[,1]))) # because haplotypes individuals
-  # are doubled indi2 <- as.vector(unlist(rbind(indit[,2],indit[,2]))) indi3 <-
-  # as.vector(unlist(rbind(indit[,3],indit[,3]))) indi4 <-
-  # as.vector(unlist(rbind(indit[,4],indit[,4]))) indi4 <- gsub(',',';',indi4)
-  # indiA <- cbind(indi1,indi2,indi3,indi4)
-  
-  
-  
-  # save fabia result
-  # save(res,sPF,annot,file=paste(fileName,pRange,'_res.Rda',sep=''))
-
-  # first haplotype extraction with offset 0
+ 
+ # first haplotype extraction with offset 0
   
   off1 <- 0
   IBDsegmentList1 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "",
