@@ -2,7 +2,7 @@
 #' @import hapFabia
 #' @import RFN
 #' @useDynLib hapRFN
-
+#'
 #' @title Samples with non-zero feature.
 #' 
 #' @description
@@ -13,7 +13,7 @@
 #'   Supplies the samples for which a feature is not zero.
 #'
 #' @template descr-sparse-matrix
-
+#'
 #' @param X The name of the file, containing a matrix in sparse format.
 #' @template param-samples
 #' @template param-matrix-filter
