@@ -341,8 +341,8 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     individuals <- 0
   }
   
-  upperBindivid = upperBP * individualsN  # remove common SNVs
-  lowerBindivid = max(1.5, lowerBP * individualsN)  # remove private SNVs
+  upperBindivid <- upperBP * individualsN  # remove common SNVs
+  lowerBindivid <- max(1.5, lowerBP * individualsN)  # remove private SNVs
   
   if (is.null(thresA)) {
     kk <- 1
@@ -502,7 +502,7 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   
   # second IBD extraction with offset half of the interval length
   
-  off2 = inteA %/% 2
+  off2 <- inteA %/% 2
   
   IBDsegmentList2 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
                                         labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA,
