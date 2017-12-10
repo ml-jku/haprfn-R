@@ -505,7 +505,7 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   off2 <- inteA %/% 2
   
   IBDsegmentList2 <- extractIBDsegments(res = res, sPF = sPF, annot = annot, chrom = "", 
-                                        labelsA = indiA, ps = ps, psZ = psZ, inteA = inteA,
+                                        labelsA = indiA, ps = 0.0, psZ = 0.0, inteA = inteA,
                                         thresA = thresA, mintagSNVs = minTagSNVs, off = off2,
                                         procMinIndivids = procMinIndivids, thresPrune = thresPrune)
   
