@@ -8,12 +8,13 @@ hapRFN(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
   infoPostfix = "_info.txt", labelsA = NULL, pRange = "", samples = 0,
   lowerBP = 0, upperBP = 0.05, p = 50, etaW = 0.1, etaP = 0.1,
-  minP = 0.01, dropout = 0, noise_type = "saltpepper", l1 = 0,
-  cyc = 100, write_file = 0, IBDsegmentLength = 50, thresCount = 1e-05,
-  mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8,
-  procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD",
-  thresA = NULL, minTagSNVs = NULL, minIndivid = 2, avSNVsDist = 100,
-  SNVclusterLength = 100, useGpu = FALSE, gpuId = -1, seed = 0)
+  minP = 0.01, dropout = 0, noise_type = "saltpepper",
+  input_noise_rate = 0, l1 = 0, cyc = 100, write_file = 0,
+  IBDsegmentLength = 50, thresCount = 1e-05, mintagSNVsFactor = 3/4,
+  pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
+  thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
+  minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
+  useGpu = FALSE, gpuId = -1, seed = 0)
 }
 \arguments{
 \item{fileName}{The base name of the input file.}
@@ -56,6 +57,10 @@ Default = 0.05.}
 \item{minP}{Minimal value for Psi. Should be in 1e-5 - 1e-1}
 
 \item{dropout}{Dropout rate. Default = 0.0.}
+
+\item{noise_type}{Type of the input noise. One of "saltpepper" or "dropout". Default = "saltpepper".}
+
+\item{input_noise_rate}{Rate of the noise of the input variables. Default = 0.0.}
 
 \item{l1}{l1 weight decay. Default = 0.0.}
 

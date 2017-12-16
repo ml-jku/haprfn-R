@@ -12,6 +12,8 @@
 #' @param etaP Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)
 #' @param minP Minimal value for Psi. Should be in 1e-5 - 1e-1
 #' @param dropout Dropout rate. Default = 0.0.
+#' @param noise_type Type of the input noise. One of "saltpepper" or "dropout". Default = "saltpepper".
+#' @param input_noise_rate Rate of the noise of the input variables. Default = 0.0.
 #' @param write_file Results are written to files (L in sparse format).
 #'   Default = 0 (not written).
 #' @param IBDsegmentLength IBD segment length in kbp. Default = 50.

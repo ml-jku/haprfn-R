@@ -12,8 +12,9 @@ vcf2sparse(fileName, prefixPath = NULL, intervalSize = 10000,
   outputFile = NULL, outputPrefixPath = NULL)
 }
 \arguments{
-\item{fileName}{The name of the input VCF file without the extension. The extension must 
-be one of .vcf or .vcf.gz, and the format must match the extension. Required.}
+\item{fileName}{The name of the input VCF file without the extension. 
+The extension must be one of .vcf or .vcf.gz, 
+and the format must match the extension. Required.}
 
 \item{prefixPath}{The path to the input file. Default is the current directory.}
 
@@ -78,8 +79,8 @@ None
 \code{vcf2sparse} converts and splits VCF files into sparse matrices.
 }
 \details{
-Reads a VCF file, converts it into a sparse matrix format, splits it into intervals
-  and writes the result into files. It generates multiple files.
+Reads a VCF file, converts it into a sparse matrix format, splits it into
+  intervals and writes the result into files. It generates multiple files.
 
   The code is implemented in C.
 }

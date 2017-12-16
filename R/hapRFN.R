@@ -167,9 +167,9 @@ function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000,
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 50, cyc = 100,
          etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0.0,
-         noise_type = "saltpepper", write_file = 0, IBDsegmentLength = 50,
-         thresCount = 1e-05, mintagSNVsFactor = 3/4, pMAF = 0.03,
-         haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
+         noise_type = "saltpepper", input_noise_rate = 0.0, write_file = 0,
+         IBDsegmentLength = 50, thresCount = 1e-05, mintagSNVsFactor = 3/4,
+         pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
          thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
          minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
          saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed) {
@@ -200,6 +200,7 @@ function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000,
                         lowerBP = lowerBP, upperBP = upperBP, p = p, l1 = l1,
                         cyc = cyc, etaW = etaW, etaP = etaP, minP = minP,
                         dropout = dropout, noise_type = noise_type,
+                        input_noise_rate = input_noise_rate,
                         write_file = write_file,
                         IBDsegmentLength = IBDsegmentLength,
                         thresCount = thresCount,
@@ -253,7 +254,7 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05,
          p = 50, etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0.0,
-         noise_type = "saltpepper", l1 = 0.0, cyc = 100, write_file = 0,
+         noise_type = "saltpepper", input_noise_rate = 0.0, l1 = 0.0, cyc = 100, write_file = 0,
          IBDsegmentLength = 50, thresCount = 1e-05, mintagSNVsFactor = 3/4,
          pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
          thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
@@ -290,6 +291,12 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   message("   Learning rate of the W parameter -------------------: ", etaW)
   message("   Learning rate of the Psi parameter -----------------: ", etaP)
   message("   Minimal value for Psi ------------------------------: ", minP)
+  if (input_noise_rate > 0.0) {
+    message("   Using input noise of type --------------------------: ", noise_type)
+    message("   └> noise rate --------------------------------------: ", input_noise_rate) 
+  } else {
+    message("   Without any input noise ----------------------------")
+  }
   if (IBDsegmentLength > 0) {
     message("   IBD segment length in kbp --------------------------: ", IBDsegmentLength)
     message("   Average distance between SNVs in bases -------------: ", avSNVsDist)
@@ -386,7 +393,8 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   
   rfn_res <- train_rfn(X = X, n_hidden = p, n_iter = cyc, etaW = etaW, 
                        etaP = etaP, minP = minP, dropout_rate = dropout,
-                       noise_type = noise_type, l1_weightdecay = l1, 
+                       noise_type = noise_type, 
+                       input_noise_rate = input_noise_rate, l1_weightdecay = l1,
                        seed = seed, use_gpu = useGpu, gpu_id = gpuId)
   
   myL <- rfn_res$W
