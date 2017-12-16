@@ -15,7 +15,8 @@ iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
   pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
   thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
   minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-  saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed)
+  saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed,
+  verbose = FALSE)
 }
 \arguments{
 \item{startRun}{The index of the first interval.}
@@ -120,6 +121,8 @@ Default = FALSE.}
 Default = -1 (invalid GPU ID).}
 
 \item{seed}{random number generator seed for RFN}
+
+\item{verbose}{TRUE, to print informational messages. Default = FALSE.}
 }
 \value{
 None

@@ -172,7 +172,8 @@ function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000,
          pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
          thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
          minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-         saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed) {
+         saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed,
+         verbose = FALSE) {
   info <- .readInfo(prefixPath, fileName, infoPostfix)
 
   nsamples <- info$nsamples
@@ -211,7 +212,7 @@ function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000,
                         minTagSNVs = minTagSNVs, minIndivid = minIndivid,
                         avSNVsDist = avSNVsDist,
                         SNVclusterLength = SNVclusterLength, useGpu = useGpu,
-                        gpuId = gpuId, seed = seed)
+                        gpuId = gpuId, seed = seed, verbose = verbose)
     
     if (saveAsCsv) {
       IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, 
@@ -259,68 +260,69 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
          pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
          thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
          minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-         useGpu = FALSE, gpuId = -1, seed = 0) {
-  message("                      ")
-  message("                      ")
-  message("Running hapRFN with:")
-  message("   Prefix string for file name of data files --------- : ", fileName)
-  message("   Path of data files ---------------------------------: ", prefixPath)
-  if (haplotypes) {
-    message("   Data consists of phased genotypes (haplotypes) -----")
-  } else {
-    message("   Data consists of unphased genotypes ----------------")
-  }
-  message("   Postfix string for file in sparse matrix format ----: ", sparseMatrixPostfix)
-  message("   Postfix string for file containing individual names : ", individualsPostfix)
-  if (is.null(labelsA)) {
-    message("   Individuals annotation is not supplied -------------")
-  } else {
-    message("   Individuals annotation is supplied -----------------")
-  }
-  message("   String indicating the interval that is analyzed ----: ", pRange)
-  if (length(samples) > 1) {
-    message("   Number of individuals included into the analysis ---: ", length(samples))
-  } else {
-    message("   All individuals are included into the analysis -----: 0 = all individuals")
-  }
-  message("   Lower bound on MAF but more than one occurence -----: ", lowerBP)
-  message("   Upper bound on MAF ---------------------------------: ", upperBP)
-  message("   Number of biclusters -------------------------------: ", p)
-  message("   Number of cycles -----------------------------------: ", cyc)
-  message("   Results written to files ---------------------------: ", write_file)
-  message("   Learning rate of the W parameter -------------------: ", etaW)
-  message("   Learning rate of the Psi parameter -----------------: ", etaP)
-  message("   Minimal value for Psi ------------------------------: ", minP)
-  if (input_noise_rate > 0.0) {
-    message("   Using input noise of type --------------------------: ", noise_type)
-    message("   └> noise rate --------------------------------------: ", input_noise_rate) 
-  } else {
-    message("   Without any input noise ----------------------------")
-  }
-  if (IBDsegmentLength > 0) {
-    message("   IBD segment length in kbp --------------------------: ", IBDsegmentLength)
-    message("   Average distance between SNVs in bases -------------: ", avSNVsDist)
-  } else {
-    if (SNVclusterLength > 0) {
-      message("   Number of SNVs in histogram bin --------------------: ", 
-        SNVclusterLength)
+         useGpu = FALSE, gpuId = -1, seed = 0, verbose = FALSE) {
+  if (verbose) {
+    message("                      ")
+    message("                      ")
+    message("Running hapRFN with:")
+    message("   Prefix string for file name of data files --------- : ", fileName)
+    message("   Path of data files ---------------------------------: ", prefixPath)
+    if (haplotypes) {
+      message("   Data consists of phased genotypes (haplotypes) -----")
     } else {
-      message("   Number of SNVs in histogram bin --------------------: 100")
+      message("   Data consists of unphased genotypes ----------------")
     }
+    message("   Postfix string for file in sparse matrix format ----: ", sparseMatrixPostfix)
+    message("   Postfix string for file containing individual names : ", individualsPostfix)
+    if (is.null(labelsA)) {
+      message("   Individuals annotation is not supplied -------------")
+    } else {
+      message("   Individuals annotation is supplied -----------------")
+    }
+    message("   String indicating the interval that is analyzed ----: ", pRange)
+    if (length(samples) > 1) {
+      message("   Number of individuals included into the analysis ---: ", length(samples))
+    } else {
+      message("   All individuals are included into the analysis -----: 0 = all individuals")
+    }
+    message("   Lower bound on MAF but more than one occurence -----: ", lowerBP)
+    message("   Upper bound on MAF ---------------------------------: ", upperBP)
+    message("   Number of biclusters -------------------------------: ", p)
+    message("   Number of cycles -----------------------------------: ", cyc)
+    message("   Results written to files ---------------------------: ", write_file)
+    message("   Learning rate of the W parameter -------------------: ", etaW)
+    message("   Learning rate of the Psi parameter -----------------: ", etaP)
+    message("   Minimal value for Psi ------------------------------: ", minP)
+    if (input_noise_rate > 0.0) {
+      message("   Using input noise of type --------------------------: ", noise_type)
+      message("   └> noise rate --------------------------------------: ", input_noise_rate) 
+    } else {
+      message("   Without any input noise ----------------------------")
+    }
+    if (IBDsegmentLength > 0) {
+      message("   IBD segment length in kbp --------------------------: ", IBDsegmentLength)
+      message("   Average distance between SNVs in bases -------------: ", avSNVsDist)
+    } else {
+      if (SNVclusterLength > 0) {
+        message("   Number of SNVs in histogram bin --------------------: ", 
+               SNVclusterLength)
+      } else {
+        message("   Number of SNVs in histogram bin --------------------: 100")
+      }
+    }
+    message("   p-value threshold for random histogram counts ------: ", thresCount)
+    message("   Min. % of segments overlap in IBD segments ---------: ", mintagSNVsFactor)
+    message("   Averaged and corrected minor allele frequency ------: ", pMAF)
+    message("   Cutoff for merging IBD segments --------------------: ", cut)
+    message("   % of cluster individuals a tagSNV must tag ---------: ", procMinIndivids)
+    message("   Threshold for pruning border tagSNVs ---------------: ", thresPrune)
+    message("   Similarity measure for merging clusters ------------: ", simv)
+    message("   Minimum matching tagSNVs for cluster similarity ----: ", minTagSNVs)
+    message("   Minimum matching individuals for cluster similarity : ", minIndivid)
+    message("   Seed -----------------------------------------------: ", seed)
+    message("                      ")
+    message("                      ")
   }
-  message("   p-value threshold for random histogram counts ------: ", thresCount)
-  message("   Min. % of segments overlap in IBD segments ---------: ", mintagSNVsFactor)
-  message("   Averaged and corrected minor allele frequency ------: ", pMAF)
-  message("   Cutoff for merging IBD segments --------------------: ", cut)
-  message("   % of cluster individuals a tagSNV must tag ---------: ", procMinIndivids)
-  message("   Threshold for pruning border tagSNVs ---------------: ", thresPrune)
-  message("   Similarity measure for merging clusters ------------: ", simv)
-  message("   Minimum matching tagSNVs for cluster similarity ----: ", minTagSNVs)
-  message("   Minimum matching individuals for cluster similarity : ", minIndivid)
-  message("   Seed -----------------------------------------------: ", seed)
-  message("                      ")
-  message("                      ")
-  
   # Compute internal parameters
   
   # compute histogram length
@@ -369,7 +371,9 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   matrixFileName <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix)
   X <- .readSparseMatrix(matrixFileName)
 
-  message("start RFN")
+  if (verbose) {
+    message("Start RFN")
+  }
 
   # RFN call
   l <- ncol(X)
@@ -395,7 +399,7 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
                        etaP = etaP, minP = minP, dropout_rate = dropout,
                        noise_type = noise_type, 
                        input_noise_rate = input_noise_rate, l1_weightdecay = l1,
-                       seed = seed, use_gpu = useGpu, gpu_id = gpuId)
+                       seed = seed, use_gpu = useGpu, gpu_id = gpuId, verbose = verbose)
   
   myL <- rfn_res$W
   myPsi <- as.vector(rfn_res$P)
