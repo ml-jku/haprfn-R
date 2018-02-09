@@ -222,13 +222,11 @@ char* bcf_snp_id(bcf1_t *bcf) {
   return bcf->d.id;
 }
 
-float bcf_allele_frequency(bcf_hdr_t *hdr, bcf1_t *bcf) {
-  float *value;
-  int n;
+float bcf_allele_frequency(bcf_hdr_t *hdr, bcf1_t *bcf, float **buffer, int *buffer_size) {
   bcf_unpack(bcf, BCF_UN_INFO);
-  int retval = bcf_get_info_float(hdr, bcf, "AF", &value, &n);
+  int retval = bcf_get_info_float(hdr, bcf, "AF", buffer, buffer_size);
   
-  return retval >= 0 && n > 0 ? value[0] : -1.0;
+  return retval >= 0 && *buffer_size > 0 ? *buffer[0] : -1.0;
 }
 
 void print_bcf_error(bcf1_t *bcf, const char *error_message, const char *solution) {
@@ -275,6 +273,8 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   kstring_t* tmps;
 
   int32_t *gt_arr = NULL, ngt_arr = 0;
+  int float_buffer_size = 1;
+  float *float_buffer = NULL;
 
   vcfgz_file_name = create_file_name(file_name, prefix_path, VcfGzPostfix, IgnoreInterval, IgnoreInterval);
   if (!(file = bcf_open(vcfgz_file_name, "r"))) {
@@ -331,6 +331,8 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
   current_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
   next_buffer = (kstring_t*) calloc(1, sizeof(kstring_t));
 
+  float_buffer = calloc(float_buffer_size, sizeof(float));
+
   size_t current_interval = 0;
   size_t next_interval = 0;
   size_t n_interval = 0;
@@ -370,7 +372,7 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
                 break;
               case kDefault:
               case kInfo:
-                frequency = bcf_allele_frequency(hdr, bcf);
+                frequency = bcf_allele_frequency(hdr, bcf, &float_buffer, &float_buffer_size);
                 if (missing_values == kInfo) {
                   if (frequency < 0) {
                     print_bcf_error(bcf, "Missing AF info field.",
@@ -561,6 +563,7 @@ cleanup:
   if (freq_flip_col) kstring_free(freq_flip_col);
   if (current_buffer) kstring_free(current_buffer);
   if (next_buffer) kstring_free(next_buffer);
+  if (float_buffer) free(float_buffer);
   if (vcfgz_file_name) free(vcfgz_file_name);
   if (vcf_file_name) free(vcf_file_name);
   if (gt_arr) free(gt_arr);
