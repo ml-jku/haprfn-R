@@ -13,5 +13,8 @@ Description: Used for analyzing variant call files (VCF)
   for finding short identity by descent (IBD) segments. This
   is achieved using Rectified Factor Networks (RFNs).
 License: GPL (>= 2) | file LICENSE
-Suggests: testthat
+Suggests: testthat,
+    knitr,
+    rmarkdown
 RoxygenNote: 6.0.1
+VignetteBuilder: knitr

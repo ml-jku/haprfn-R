@@ -1,0 +1,120 @@
+---
+title: "HapRFN workflow"
+author: "Bencze Balazs"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{HapRFN}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+### HapRFN
+
+The HapRFN package is used to find segments that are Identity by Descent (IBD) in a dataset describing single nucleotide variations (SNVs) of a sample of population (individuals or haplotypes).
+The package is split up into multiple dependent functions that have to be used in a specific order. This document describes and explains that order.
+
+## vcf2sparse
+
+The function converts a .vcf file to a sparse matrix format. The vcf file can be in text or gzipped format. The gzipped vcf file can be accompanied by an index file, which must have the same name as the vcf file (e.g. chr1.vcf.gz and chr1.vcf.gz.tbi). This function also splits up the dataset into intervals, to reduce the search space for IBD segments (they are usually grouped together).
+
+```r
+library(hapRFN)
+
+# This is the name of the vcf file without the extension
+filename <- "chromosome1"
+
+# This is the path to the vcf file
+path <- "/home/users/research/dataset/vcf"
+
+# The name of the output file (defaults to the input filename,
+# but appends a different extension and it does not overwrite it)
+output <- "chromosome1_output_sparse"
+
+# The path to the output
+outputPath <- "/home/users/research/dataset/split"
+
+# These are the default values, that are used throughout the package
+intervalSize <- 10000
+shiftSize <- 5000
+
+vcf2sparse(filename, path, intervalSize, shiftSize, outputFile = output,
+           outputPrefixPath = outputPath)
+
+```
+
+After calling this command, it splits the matrix in multiple intervals, in a sparse matrix format, and generates an annotation, info and individuals file.
+
+## iterateIntervals
+
+This function iterates over the splitted matrices and applies the HapRFN algorithm to each split. After running RFN it also extracts IBD segments.
+
+```r
+
+# Read numbers from generated info file
+ina <- as.numeric(readLines(paste0(outputPath, output, "_info.txt"), n = 3, warn = F))
+noSNVs <- ina[2]
+over <- intervalSize %/% shiftSize
+N1 <- noSNVs %/% shiftSize
+endRun <- N1 - over + 2
+
+annotationFile <- paste0(outputPath, "/", output, "_annot.txt")
+
+iterateIntervals(endRun = endRun, annotationFile = annotationFile, fileName = output, 
+
+```
+
+Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+
+- Never uses retina figures
+- Has a smaller default figure size
+- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+
+## Vignette Info
+
+Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+
+## Styles
+
+The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
+
+    output: 
+      rmarkdown::html_vignette:
+        css: mystyles.css
+
+## Figures
+
+The figure sizes have been customised so that you can easily put two images side-by-side. 
+
+```{r, fig.show='hold'}
+plot(1:10)
+plot(10:1)
+```
+
+You can enable figure captions by `fig_caption: yes` in YAML:
+
+    output:
+      rmarkdown::html_vignette:
+        fig_caption: yes
+
+Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
+
+## More Examples
+
+You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
+
+```{r, echo=FALSE, results='asis'}
+knitr::kable(head(mtcars, 10))
+```
+
+Also a quote using `>`:
+
+> "He who gives up [code] safety for [code] speed deserves neither."
+([via](https://twitter.com/hadleywickham/status/504368538874703872))
