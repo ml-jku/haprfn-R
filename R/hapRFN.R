@@ -172,7 +172,7 @@ function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000,
          pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
          thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
          minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-         saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed,
+         saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = -1,
          verbose = FALSE) {
   info <- .readInfo(prefixPath, fileName, infoPostfix)
 
@@ -260,7 +260,7 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
          pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
          thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
          minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-         useGpu = FALSE, gpuId = -1, seed = 0, verbose = FALSE) {
+         useGpu = FALSE, gpuId = -1, seed = -1, verbose = FALSE) {
   if (verbose) {
     message("                      ")
     message("                      ")
