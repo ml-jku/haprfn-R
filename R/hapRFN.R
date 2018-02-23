@@ -146,8 +146,8 @@ function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
 #'
 #' @description Iterate over intervals and run hapRFN.
 #'
-#' @param startRun The index of the first interval.
-#' @param endRun The index of the last interval. Required.
+#' @param startRun The index of the first interval. Default = 1
+#' @param endRun The index of the last interval. Default = 0, which means the last index.
 #' @param annotationFile The name of the annotation file for the individuals.
 #' @param fileName The base name of the input file. Required.
 #' @template param-in-file
@@ -161,7 +161,7 @@ function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
 #'
 #' @export
 iterateIntervals <-
-function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000, 
+function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000, 
          annotationFile = NULL, fileName, prefixPath = "",
          sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
@@ -180,6 +180,16 @@ function(startRun = 1, endRun, shiftSize = 5000, intervalSize = 10000,
   snvs <- info$nsnps
   
   save(nsamples, snvs, file = paste0(fileName, "_All", ".Rda"))
+
+  if (startRun < 1) {
+    startRun <- 1
+  }
+
+  if (endRun < 1) {
+    over <- intervalSize %/% shiftSize
+    runs <- snvs %/% shiftSize
+    endRun <- runs - over + 2
+  }
 
   for (posAll in startRun:endRun) {
     start <- (posAll - 1) * shiftSize
