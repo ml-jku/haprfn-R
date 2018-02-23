@@ -16,12 +16,14 @@ knitr::opts_chunk$set(
 )
 ```
 
-### HapRFN
+### HapRFN Package
 
 The HapRFN package is used to find segments that are Identity by Descent (IBD) in a dataset describing single nucleotide variations (SNVs) of a sample of population (individuals or haplotypes).
 The package is split up into multiple dependent functions that have to be used in a specific order. This document describes and explains that order.
 
-## vcf2sparse
+## Analysis pipeline
+
+# Preprocessing with vcf2sparse
 
 The function converts a .vcf file to a sparse matrix format. The vcf file can be in text or gzipped format. The gzipped vcf file can be accompanied by an index file, which must have the same name as the vcf file (e.g. chr1.vcf.gz and chr1.vcf.gz.tbi). This function also splits up the dataset into intervals, to reduce the search space for IBD segments (they are usually grouped together).
 
@@ -52,69 +54,73 @@ vcf2sparse(filename, path, intervalSize, shiftSize, outputFile = output,
 
 After calling this command, it splits the matrix in multiple intervals, in a sparse matrix format, and generates an annotation, info and individuals file.
 
-## iterateIntervals
+# Running the HapRFN method
 
 This function iterates over the splitted matrices and applies the HapRFN algorithm to each split. After running RFN it also extracts IBD segments.
 
 ```r
+# Set the id number of the GPU
+gpuId <- 0
 
-# Read numbers from generated info file
-ina <- as.numeric(readLines(paste0(outputPath, output, "_info.txt"), n = 3, warn = F))
-noSNVs <- ina[2]
-over <- intervalSize %/% shiftSize
-N1 <- noSNVs %/% shiftSize
-endRun <- N1 - over + 2
+# The number of IBDsegments (biclusters) to detect
+biclusters <- 50
 
 annotationFile <- paste0(outputPath, "/", output, "_annot.txt")
 
-iterateIntervals(endRun = endRun, annotationFile = annotationFile, fileName = output, 
+iterateIntervals(annotationFile = annotationFile, fileName = output,
+  shiftSize = shiftSize, intervalSize = intervalSize,
+  prefixPath = path, gpuId = gpuId, p = biclusters)
 
+identifyDuplicates(fileName = fileName, shiftSize = shiftSize,
+  intervalSize = intervalSize)
+
+anaRes <- analyzeIBDsegments(fileName = fileName, shiftSize = shiftSize,
+  intervalSize = intervalSize)
 ```
 
-Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
+# Analysis of the results
 
-- Never uses retina figures
-- Has a smaller default figure size
-- Uses a custom CSS stylesheet instead of the default Twitter Bootstrap style
+```r
+print("Number IBD segments:")
+print(anaRes$noIBDsegments)
+print("Statistics on IBD segment lengths in SNVs (all SNVs in the
+IBD segment):")
+print(anaRes$avIBDsegmentLengthSNVS)
+print("Statistics on IBD segment lengths in bp:")
+print(anaRes$avIBDsegmentLengthS)
+print("Statistics on number of individuals that share an IBD segment:")
+print(anaRes$avnoIndividS)
+print("Statistics on number of IBD segment tagSNVs:")
+print(anaRes$avnoTagSNVsS)
+print("Statistics on MAF of IBD segment tagSNVs:")
+print(anaRes$avnoFreqS)
+print("Statistics on MAF within the group of IBD segment tagSNVs:")
+print(anaRes$avnoGroupFreqS)
+print("Statistics on number of changes between major and minor allele frequency:")
+print(anaRes$avnotagSNVChangeS)
+print("Statistics on tagSNVs per individual that shares an IBD segment:")
+print(anaRes$avnotagSNVsPerIndividualS)
+print("Statistics on number of individuals that have the minor allele of tagSNVs:")
+print(anaRes$avnoindividualPerTagSNVS)
 
-## Vignette Info
+##### load result for interval 50 #######
+posAll <- 50 # (50-1)*5000 = 245000: segment 245000 to 255000
+start <- (posAll - 1) * shiftSize
+end <- start + intervalSize
+pRange <- paste0("_", format(start, scientific = FALSE), "_",
+  format(end, scientific = FALSE))
+load(file = paste0(fileName, pRange, "_resAnno", ".Rda"))
+IBDsegmentList <- resHapFabia$mergedIBDsegmentList
 
-Note the various macros within the `vignette` section of the metadata block above. These are required in order to instruct R how to build the vignette. Note that you should change the `title` field and the `\VignetteIndexEntry` to match the title of your vignette.
+summary(IBDsegmentList)
+##### plot IBD segments in interval 50 #######
+plot(IBDsegmentList, filename = paste0(fileName, pRange, "_mat"))
+   ##attention: filename without type ".txt"
 
-## Styles
+##### plot the first IBD segment in interval 50 #######
 
-The `html_vignette` template includes a basic CSS theme. To override this theme you can specify your own CSS in the document metadata as follows:
-
-    output: 
-      rmarkdown::html_vignette:
-        css: mystyles.css
-
-## Figures
-
-The figure sizes have been customised so that you can easily put two images side-by-side. 
-
-```{r, fig.show='hold'}
-plot(1:10)
-plot(10:1)
+IBDsegment <- IBDsegmentList[[1]]
+plot(IBDsegment, filename = paste0(fileName, pRange, "_mat"))
+   ##attention: filename without type ".txt"
 ```
 
-You can enable figure captions by `fig_caption: yes` in YAML:
-
-    output:
-      rmarkdown::html_vignette:
-        fig_caption: yes
-
-Then you can use the chunk option `fig.cap = "Your figure caption."` in **knitr**.
-
-## More Examples
-
-You can write math expressions, e.g. $Y = X\beta + \epsilon$, footnotes^[A footnote here.], and tables, e.g. using `knitr::kable()`.
-
-```{r, echo=FALSE, results='asis'}
-knitr::kable(head(mtcars, 10))
-```
-
-Also a quote using `>`:
-
-> "He who gives up [code] safety for [code] speed deserves neither."
-([via](https://twitter.com/hadleywickham/status/504368538874703872))
