@@ -180,18 +180,10 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
   snvs <- info$nsnps
   
   save(nsamples, snvs, file = paste0(fileName, "_All", ".Rda"))
+  
+  intervals <- .findIntervals(startRun, endRun, snvs, intervalSize, shiftSize)
 
-  if (startRun < 1) {
-    startRun <- 1
-  }
-
-  if (endRun < 1) {
-    over <- intervalSize %/% shiftSize
-    runs <- snvs %/% shiftSize
-    endRun <- runs - over + 2
-  }
-
-  for (posAll in startRun:endRun) {
+  for (posAll in intervals$startRun:intervals$endRun) {
     start <- (posAll - 1) * shiftSize
     end <- start + intervalSize
 
@@ -599,15 +591,15 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
 #'   Results are written to the file "dups.Rda".
 #'
 #' @param fileName The name of the Rda result file.
-#' @param startRun The index of the first interval.
-#' @param endRun The index of the last interval. Required.
+#' @param startRun The index of the first interval. Default = 1
+#' @param endRun The index of the last interval. Default = 0, which means the last index.
 #' @template param-interval
 #'
 #' @return None
 #'
 #' @export
 identifyDuplicates <-
-function(fileName, startRun = 1, endRun, shiftSize = 5000, 
+function(fileName, startRun = 1, endRun = 0, shiftSize = 5000, 
          intervalSize = 10000) {
   labelsA <- c()
   snvs <- c()
@@ -619,7 +611,11 @@ function(fileName, startRun = 1, endRun, shiftSize = 5000,
   avIBDsegmentLength <- list()
   avIBDsegmentPos <- list()
   count <- 0
-  
+
+  intervals <- .findIntervals(startRun, endRun, snvs, intervalSize, shiftSize)
+  startRun <- intervals$startRun
+  endRun <- intervals$endRun
+
   for (posAll in startRun:endRun) {
     start <- (posAll-1)*shiftSize
     end <- start + intervalSize
@@ -740,8 +736,8 @@ function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #'   Results are written to the file "analyzeResults.Rda".
 #'
 #' @param fileName The name of the Rda result file.
-#' @param startRun The index of the first interval.
-#' @param endRun The index of the last interval. Required.
+#' @param startRun The index of the first interval. Default = 1
+#' @param endRun The index of the last interval. Default = 0, which means the last index.
 #' @template param-interval
 #'
 #' @return A list with elements
@@ -777,7 +773,7 @@ function(fileName, startRun = 1, endRun, shiftSize = 5000,
 #' 
 #' @export
 analyzeIBDsegments <-
-function(fileName, startRun = 1, endRun, shiftSize = 5000, 
+function(fileName, startRun = 1, endRun = 0, shiftSize = 5000, 
          intervalSize = 10000) {
   countsA2 <- c()
   mergedIBDsegmentList <- list()
@@ -788,6 +784,10 @@ function(fileName, startRun = 1, endRun, shiftSize = 5000,
   load(file = paste0(fileName, "_All", ".Rda"))
   load(file = "dups.Rda")
   
+  intervals <- .findIntervals(startRun, endRun, snvs, intervalSize, shiftSize)
+  startRun <- intervals$startRun
+  endRun <- intervals$endRun
+    
   if (startRun > 1 && length(countsA2[,3]) > 1) {
     tzz <- countsA2[which(countsA2[, 3] < startRun), ]
     offC <- max(tzz[, 1])
@@ -990,4 +990,20 @@ function(fileName) {
 .createRangeString <-
 function(start, end) {
   paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
+}
+
+# Finds the intervals
+.findIntervals <-
+function(startRun, endRun, snvs, intervalSize, shiftSize) {
+  if (startRun < 0) {
+    startRun <- 1
+  }
+
+  if (endRun < 0) {
+    over <- intervalSize %/% shiftSize
+    runs <- snvs %/% shiftSize
+    endRun <- runs - over + 2
+  }
+
+  list(startRun = startRun, endRun = endRun)
 }

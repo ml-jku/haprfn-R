@@ -4,15 +4,15 @@
 \alias{analyzeIBDsegments}
 \title{Analyze IBD segments.}
 \usage{
-analyzeIBDsegments(fileName, startRun = 1, endRun, shiftSize = 5000,
+analyzeIBDsegments(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
   intervalSize = 10000)
 }
 \arguments{
 \item{fileName}{The name of the Rda result file.}
 
-\item{startRun}{The index of the first interval.}
+\item{startRun}{The index of the first interval. Default = 1}
 
-\item{endRun}{The index of the last interval. Required.}
+\item{endRun}{The index of the last interval. Default = 0, which means the last index.}
 
 \item{shiftSize}{Size of the distance between the beginning of the
 intervals. Should be smaller than the interval size, otherwise

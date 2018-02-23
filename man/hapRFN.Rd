@@ -14,7 +14,7 @@ hapRFN(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
   thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
   minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-  useGpu = FALSE, gpuId = -1, seed = 0, verbose = FALSE)
+  useGpu = FALSE, gpuId = -1, seed = -1, verbose = FALSE)
 }
 \arguments{
 \item{fileName}{The base name of the input file.}

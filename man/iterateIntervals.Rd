@@ -4,7 +4,7 @@
 \alias{iterateIntervals}
 \title{Iterate intervals.}
 \usage{
-iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
+iterateIntervals(startRun = 1, endRun = 0, shiftSize = 5000,
   intervalSize = 10000, annotationFile = NULL, fileName, prefixPath = "",
   sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
   individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
@@ -15,13 +15,13 @@ iterateIntervals(startRun = 1, endRun, shiftSize = 5000,
   pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
   thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
   minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-  saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = seed,
+  saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = -1,
   verbose = FALSE)
 }
 \arguments{
-\item{startRun}{The index of the first interval.}
+\item{startRun}{The index of the first interval. Default = 1}
 
-\item{endRun}{The index of the last interval. Required.}
+\item{endRun}{The index of the last interval. Default = 0, which means the last index.}
 
 \item{shiftSize}{Size of the distance between the beginning of the
 intervals. Should be smaller than the interval size, otherwise
