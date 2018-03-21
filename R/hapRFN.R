@@ -370,7 +370,7 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   
   # End Compute internal parameters
   
-  matrixFileName <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix)
+  matrixFileName <- file.path(prefixPath, paste0(fileName, pRange, sparseMatrixPostfix))
   X <- .readSparseMatrix(matrixFileName)
 
   if (verbose) {
@@ -438,7 +438,7 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
   
   # Load individuals to Ls of interest: load minor alleles of the Ls
   
-  sparseMatrixFilename <- paste0(prefixPath, fileName, pRange, sparseMatrixPostfix)
+  sparseMatrixFilename <- file.path(prefixPath, paste0(fileName, pRange, sparseMatrixPostfix))
   sPF <- hapRFN::samplesPerFeature(X = sparseMatrixFilename, samples = samples,
                                    lowerB = lowerBindivid, upperB = upperBindivid)
 
@@ -456,8 +456,9 @@ function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
     # annot[[11]] <- 1 = changed if major allele is 
     # actually minor allele otherwise 0
     
-    annot <- read.table(paste0(prefixPath, fileName, pRange, annotationPostfix), 
-                        header = FALSE, sep = "\t", quote = "", as.is = TRUE)
+    annotFileName <- file.path(prefixPath, paste0(fileName, pRange, annotationPostfix))
+    annot <- read.table(annotFileName, header = FALSE, sep = "\t", 
+                        quote = "", as.is = TRUE)
     
     for (i in 1:length(annot)) {
       annot[[i]] <- gsub(",", ";", annot[[i]])
@@ -895,14 +896,14 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
 # Read info file and return a list with nsamples and nsnps
 .readInfo <- 
 function(prefixPath, fileName, infoPostfix) {
-  setNames(as.list(as.numeric(readLines(paste0(prefixPath, fileName, infoPostfix), n = 2,
+  setNames(as.list(as.numeric(readLines(file.path(prefixPath, paste0(fileName, infoPostfix)), n = 2,
                                         warn = FALSE))), c("nsamples", "nsnps"))
 }
 
 # Read individuals file
 .readIndividuals <- 
 function(prefixPath, fileName, individualsPostfix) {
-  read.table(paste0(prefixPath, fileName, individualsPostfix), 
+  read.table(file.path(prefixPath, paste0(fileName, individualsPostfix)), 
       header = FALSE, sep = " ", quote = "", as.is = TRUE)
 }
 
@@ -999,7 +1000,7 @@ function(startRun, endRun, snvs, intervalSize, shiftSize) {
     startRun <- 1
   }
 
-  if (endRun < 0) {
+  if (endRun <= 0) {
     over <- intervalSize %/% shiftSize
     runs <- snvs %/% shiftSize
     endRun <- runs - over + 2
