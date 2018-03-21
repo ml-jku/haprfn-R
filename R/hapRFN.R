@@ -147,7 +147,8 @@ function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
 #' @description Iterate over intervals and run hapRFN.
 #'
 #' @param startRun The index of the first interval. Default = 1
-#' @param endRun The index of the last interval. Default = 0, which means the last index.
+#' @param endRun The index of the last interval. Default = 0, 
+#'   which means the last index.
 #' @param annotationFile The name of the annotation file for the individuals.
 #' @param fileName The base name of the input file. Required.
 #' @template param-in-file
