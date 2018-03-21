@@ -1,5 +1,7 @@
 #' @param sparseMatrixPostfix The posftix for the input matrices.
 #'   Default = "_mat.txt".
+#' @param outputPath The path for the output files. Default = NULL, which uses
+#'   the current directory. 
 #' @param lowerBP Lower bound for filtering the inputs columns, minimal MAF 
 #'   (however more than one occurence to remove private SNVs).
 #'   Default = 0.0.
@@ -9,11 +11,14 @@
 #' @param l1 l1 weight decay. Default = 0.0. 
 #' @param cyc Number of iterations. Default = 100.
 #' @param etaW Learning rate of the W parameter
-#' @param etaP Learning rate of the Psi parameter (It's probably save to set this to the same value as etaW)
+#' @param etaP Learning rate of the Psi parameter.
+#'   (It's safe to set this to the same value as etaW)
 #' @param minP Minimal value for Psi. Should be in 1e-5 - 1e-1
 #' @param dropout Dropout rate. Default = 0.0.
-#' @param noise_type Type of the input noise. One of "saltpepper" or "dropout". Default = "saltpepper".
-#' @param input_noise_rate Rate of the noise of the input variables. Default = 0.0.
+#' @param noise_type Type of the input noise. One of "saltpepper" or "dropout".
+#'   Default = "saltpepper".
+#' @param input_noise_rate Rate of the noise of the input variables.
+#'   Default = 0.0.
 #' @param write_file Results are written to files (L in sparse format).
 #'   Default = 0 (not written).
 #' @param IBDsegmentLength IBD segment length in kbp. Default = 50.

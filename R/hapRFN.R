@@ -163,7 +163,7 @@ function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
 #' @export
 iterateIntervals <-
 function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000, 
-         annotationFile = NULL, fileName, prefixPath = "",
+         annotationFile = NULL, fileName, prefixPath = "", outputPath = NULL,
          sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 50, cyc = 100,
@@ -175,6 +175,9 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
          minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
          saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = -1,
          verbose = FALSE) {
+  if (outputPath == NULL) {
+    outputPath = getwd()
+  }
   info <- .readInfo(prefixPath, fileName, infoPostfix)
 
   nsamples <- info$nsamples
@@ -196,7 +199,8 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
                           annotationFile, haplotypes, nsamples)
     pRange <- .createRangeString(start, end)
     
-    resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath, 
+    resHapRFN <- hapRFN(fileName = fileName, prefixPath = prefixPath,
+                        outputPath = outputPath,
                         sparseMatrixPostfix = sparseMatrixPostfix,
                         annotationPostfix = annotationPostfix,
                         individualsPostfix = individualsPostfix,
@@ -253,23 +257,32 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
 #' @importFrom methods new
 #'
 hapRFN <-
-function(fileName, prefixPath = "", sparseMatrixPostfix = "_mat.txt",
-         annotationPostfix = "_annot.txt",
+function(fileName, prefixPath = "", outputPath = NULL,
+         sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05,
          p = 50, etaW = 0.1, etaP = 0.1, minP = 0.01, dropout = 0.0,
-         noise_type = "saltpepper", input_noise_rate = 0.0, l1 = 0.0, cyc = 100, write_file = 0,
-         IBDsegmentLength = 50, thresCount = 1e-05, mintagSNVsFactor = 3/4,
-         pMAF = 0.03, haplotypes = FALSE, cut = 0.8, procMinIndivids = 0.1,
-         thresPrune = 0.001, simv = "minD", thresA = NULL, minTagSNVs = NULL,
-         minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
-         useGpu = FALSE, gpuId = -1, seed = -1, verbose = FALSE) {
+         noise_type = "saltpepper", input_noise_rate = 0.0, l1 = 0.0, 
+         cyc = 100, write_file = 0, IBDsegmentLength = 50, thresCount = 1e-05,
+         mintagSNVsFactor = 3/4, pMAF = 0.03, haplotypes = FALSE, cut = 0.8, 
+         procMinIndivids = 0.1, thresPrune = 0.001, simv = "minD", 
+         thresA = NULL, minTagSNVs = NULL, minIndivid = 2, avSNVsDist = 100,
+         SNVclusterLength = 100, useGpu = FALSE, gpuId = -1, seed = -1,
+         verbose = FALSE) {
+  if (outputPath == NULL) {
+    outputPath = getwd()
+  }
+
   if (verbose) {
     message("                      ")
     message("                      ")
     message("Running hapRFN with:")
-    message("   Prefix string for file name of data files --------- : ", fileName)
-    message("   Path of data files ---------------------------------: ", prefixPath)
+    message("   Prefix string for file name of data files --------- : ", 
+            fileName)
+    message("   Path of data files ---------------------------------: ",
+            prefixPath)
+    message("   Path of output files -------------------------------: ",
+            outputPath)
     if (haplotypes) {
       message("   Data consists of phased genotypes (haplotypes) -----")
     } else {
