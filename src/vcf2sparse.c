@@ -62,6 +62,7 @@ static const size_t IgnoreInterval = -1;
 // file_name must be released
 char* create_file_name(const char *file_name, const char *prefix, const char *postfix, const size_t lower_interval, const size_t upper_interval) {
   static char buffer[100];
+  static char separator[2];  
   
   if (lower_interval == IgnoreInterval || upper_interval == IgnoreInterval) {
     buffer[0] = 0;
@@ -69,23 +70,20 @@ char* create_file_name(const char *file_name, const char *prefix, const char *po
     sprintf(buffer, "_%zd_%zd", lower_interval, upper_interval);  
   }
 
-  char *separator = (char*) calloc(2, sizeof(char));
   size_t prefix_len = strlen(prefix);
   if (prefix_len > 0 && prefix[prefix_len - 1] != PATH_SEPARATOR) {
-    separator[0] = '/';
+    separator[0] = PATH_SEPARATOR;
     separator[1] = 0;
   } else {
     separator[0] = 0;
   }
 
-  char *fn = (char*) calloc(prefix_len + strlen(file_name) + strlen(buffer) + strlen(postfix) + 1, sizeof(char));
+  char *fn = (char*) calloc(prefix_len + strlen(separator) + strlen(file_name) + strlen(buffer) + strlen(postfix) + 1, sizeof(char));
   strcat(fn, prefix);
   strcat(fn, separator);
   strcat(fn, file_name);
   strcat(fn, buffer);
   strcat(fn, postfix);
-
-  free(separator);
 
   return fn;
 }
