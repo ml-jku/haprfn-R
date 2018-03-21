@@ -4,11 +4,14 @@
 \alias{analyzeIBDsegments}
 \title{Analyze IBD segments.}
 \usage{
-analyzeIBDsegments(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
-  intervalSize = 10000)
+analyzeIBDsegments(fileName, prefixPath = getwd(), startRun = 1,
+  endRun = 0, shiftSize = 5000, intervalSize = 10000)
 }
 \arguments{
 \item{fileName}{The name of the Rda result file.}
+
+\item{prefixPath}{The path to the analysis folder. Default = the current
+working directory}
 
 \item{startRun}{The index of the first interval. Default = 1}
 

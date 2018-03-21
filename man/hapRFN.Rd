@@ -4,7 +4,7 @@
 \alias{hapRFN}
 \title{Identifying IBD segments.}
 \usage{
-hapRFN(fileName, prefixPath = "", outputPath = NULL,
+hapRFN(fileName, prefixPath = "", outputPath = getwd(),
   sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
   individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
   labelsA = NULL, pRange = "", samples = 0, lowerBP = 0,
@@ -22,8 +22,8 @@ hapRFN(fileName, prefixPath = "", outputPath = NULL,
 
 \item{prefixPath}{The path to the input file. Default is the current directory.}
 
-\item{outputPath}{The path for the output files. Default = NULL, which uses
-the current directory.}
+\item{outputPath}{The path for the output files. Default = the current
+directory.}
 
 \item{sparseMatrixPostfix}{The posftix for the input matrices.
 Default = "_mat.txt".}

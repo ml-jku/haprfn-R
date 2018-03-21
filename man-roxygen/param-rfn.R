@@ -1,7 +1,7 @@
 #' @param sparseMatrixPostfix The posftix for the input matrices.
 #'   Default = "_mat.txt".
-#' @param outputPath The path for the output files. Default = NULL, which uses
-#'   the current directory. 
+#' @param outputPath The path for the output files. Default = the current
+#'   directory. 
 #' @param lowerBP Lower bound for filtering the inputs columns, minimal MAF 
 #'   (however more than one occurence to remove private SNVs).
 #'   Default = 0.0.

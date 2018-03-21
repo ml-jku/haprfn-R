@@ -163,7 +163,7 @@ function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
 #' @export
 iterateIntervals <-
 function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000, 
-         annotationFile = NULL, fileName, prefixPath = "", outputPath = NULL,
+         annotationFile = NULL, fileName, prefixPath = "", outputPath = getwd(),
          sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 50, cyc = 100,
@@ -175,16 +175,13 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
          minIndivid = 2, avSNVsDist = 100, SNVclusterLength = 100,
          saveAsCsv = FALSE, useGpu = TRUE, gpuId = 0, seed = -1,
          verbose = FALSE) {
-  if (outputPath == NULL) {
-    outputPath = getwd()
-  }
   info <- .readInfo(prefixPath, fileName, infoPostfix)
 
   nsamples <- info$nsamples
   snvs <- info$nsnps
   
-  save(nsamples, snvs, file = paste0(fileName, "_All", ".Rda"))
-  
+  save(nsamples, snvs, file = .filePath(outputPath, fileName, "_All.Rda"))
+ 
   intervals <- .findIntervals(startRun, endRun, snvs, intervalSize, shiftSize)
 
   for (posAll in intervals$startRun:intervals$endRun) {
@@ -223,11 +220,12 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
     
     if (saveAsCsv) {
       IBDsegmentList2excel(resHapRFN$mergedIBDsegmentList, 
-                           paste0(fileName, pRange, ".csv"))  
+                           .filePath(outputPath, fileName, pRange, ".csv"))
     }
     
     annot <- c()
-    save(resHapRFN, annot, file = paste0(fileName, pRange, "_resAnno", ".Rda"))
+    save(resHapRFN, annot,
+         file = .filePath(outputPath, fileName, pRange, "_resAnno", ".Rda"))
   }
 }
 
@@ -257,7 +255,7 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
 #' @importFrom methods new
 #'
 hapRFN <-
-function(fileName, prefixPath = "", outputPath = NULL,
+function(fileName, prefixPath = "", outputPath = getwd(),
          sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05,
@@ -269,11 +267,7 @@ function(fileName, prefixPath = "", outputPath = NULL,
          thresA = NULL, minTagSNVs = NULL, minIndivid = 2, avSNVsDist = 100,
          SNVclusterLength = 100, useGpu = FALSE, gpuId = -1, seed = -1,
          verbose = FALSE) {
-  if (outputPath == NULL) {
-    outputPath = getwd()
-  }
-
-  if (verbose) {
+ if (verbose) {
     message("                      ")
     message("                      ")
     message("Running hapRFN with:")
@@ -384,7 +378,7 @@ function(fileName, prefixPath = "", outputPath = NULL,
   
   # End Compute internal parameters
   
-  matrixFileName <- file.path(prefixPath, paste0(fileName, pRange, sparseMatrixPostfix))
+  matrixFileName <- .filePath(prefixPath, fileName, pRange, sparseMatrixPostfix)
   X <- .readSparseMatrix(matrixFileName)
 
   if (verbose) {
@@ -452,7 +446,7 @@ function(fileName, prefixPath = "", outputPath = NULL,
   
   # Load individuals to Ls of interest: load minor alleles of the Ls
   
-  sparseMatrixFilename <- file.path(prefixPath, paste0(fileName, pRange, sparseMatrixPostfix))
+  sparseMatrixFilename <- .filePath(prefixPath, fileName, pRange, sparseMatrixPostfix)
   sPF <- hapRFN::samplesPerFeature(X = sparseMatrixFilename, samples = samples,
                                    lowerB = lowerBindivid, upperB = upperBindivid)
 
@@ -470,7 +464,7 @@ function(fileName, prefixPath = "", outputPath = NULL,
     # annot[[11]] <- 1 = changed if major allele is 
     # actually minor allele otherwise 0
     
-    annotFileName <- file.path(prefixPath, paste0(fileName, pRange, annotationPostfix))
+    annotFileName <- .filePath(prefixPath, fileName, pRange, annotationPostfix)
     annot <- read.table(annotFileName, header = FALSE, sep = "\t", 
                         quote = "", as.is = TRUE)
     
@@ -488,8 +482,9 @@ function(fileName, prefixPath = "", outputPath = NULL,
   }
   
   if (is.null(labelsA)) {
-    labelsAA <- read.table(paste0(prefixPath, fileName, individualsPostfix), 
-                           header = FALSE, sep = " ", quote = "", as.is = TRUE)
+    labelsPath <- .filePath(prefixPath, fileName, individualsPostfix)
+    labelsAA <- read.table(labelsPath, header = FALSE, sep = " ", quote = "",
+                           as.is = TRUE)
     if (haplotypes) {
       lA <- as.vector(unlist(rbind(labelsAA[, 2], labelsAA[, 2])))
     } else {
@@ -606,22 +601,25 @@ function(fileName, prefixPath = "", outputPath = NULL,
 #'   Results are written to the file "dups.Rda".
 #'
 #' @param fileName The name of the Rda result file.
+#' @param prefixPath The path to the analysis folder. Default = the current
+#'   working directory
 #' @param startRun The index of the first interval. Default = 1
-#' @param endRun The index of the last interval. Default = 0, which means the last index.
+#' @param endRun The index of the last interval. Default = 0, which means
+#'   the last index.
 #' @template param-interval
 #'
 #' @return None
 #'
 #' @export
 identifyDuplicates <-
-function(fileName, startRun = 1, endRun = 0, shiftSize = 5000, 
-         intervalSize = 10000) {
+function(fileName, prefixPath = getwd(), startRun = 1, endRun = 0,
+         shiftSize = 5000, intervalSize = 10000) {
   labelsA <- c()
   snvs <- c()
   resHapRFN <- c()
 
   # loads nsamples and snvs
-  load(file = paste(fileName, "_All", ".Rda",sep=""))
+  load(file = .filePath(prefixPath, fileName, "_All.Rda"))
   
   avIBDsegmentLength <- list()
   avIBDsegmentPos <- list()
@@ -632,7 +630,7 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
   endRun <- intervals$endRun
 
   for (posAll in startRun:endRun) {
-    start <- (posAll-1)*shiftSize
+    start <- (posAll - 1) * shiftSize
     end <- start + intervalSize
     
     if (end > snvs) {
@@ -641,7 +639,7 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
     
     pRange <- .createRangeString(start, end)
     
-    load(file = paste0(fileName, pRange, "_resAnno.Rda"))
+    load(file = .filePath(prefixPath, fileName, pRange, "_resAnno.Rda"))
     
     mergedIBDsegmentList <- resHapRFN$mergedIBDsegmentList
     
@@ -683,7 +681,7 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
     
     pRange <- .createRangeString(start, end)
     
-    load(file = paste(fileName, pRange, "_resAnno.Rda", sep = ""))
+    load(file = .filePath(prefixPath, fileName, pRange, "_resAnno.Rda"))
     
     mergedIBDsegmentList <- resHapRFN$mergedIBDsegmentList
     
@@ -731,7 +729,7 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
     colnames(countsA2) <- c("allCount", "IBDsegmentC", "posAll")
   }
     
-  save(dups, un, countsA1, countsA2, file = paste("dups.Rda", sep = ""))
+  save(dups, un, countsA1, countsA2, file = .filePath(prefixPath, "dups.Rda"))
 }
 
 #' @title Analyze IBD segments.
@@ -751,6 +749,8 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
 #'   Results are written to the file "analyzeResults.Rda".
 #'
 #' @param fileName The name of the Rda result file.
+#' @param prefixPath The path to the analysis folder. Default = the current
+#'   working directory
 #' @param startRun The index of the first interval. Default = 1
 #' @param endRun The index of the last interval. Default = 0, which means the last index.
 #' @template param-interval
@@ -788,22 +788,22 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
 #' 
 #' @export
 analyzeIBDsegments <-
-function(fileName, startRun = 1, endRun = 0, shiftSize = 5000, 
-         intervalSize = 10000) {
+function(fileName, prefixPath = getwd(), startRun = 1, endRun = 0,
+         shiftSize = 5000, intervalSize = 10000) {
   countsA2 <- c()
   mergedIBDsegmentList <- list()
   dups <- c()
   snvs <- c()
   resHapRFN <- c()
 
-  load(file = paste0(fileName, "_All", ".Rda"))
-  load(file = "dups.Rda")
+  load(file = .filePath(prefixPath, fileName, "_All.Rda"))
+  load(file = .filePath(prefixPath, "dups.Rda"))
   
   intervals <- .findIntervals(startRun, endRun, snvs, intervalSize, shiftSize)
   startRun <- intervals$startRun
   endRun <- intervals$endRun
     
-  if (startRun > 1 && length(countsA2[,3]) > 1) {
+  if (startRun > 1 && length(countsA2[, 3]) > 1) {
     tzz <- countsA2[which(countsA2[, 3] < startRun), ]
     offC <- max(tzz[, 1])
   } else {
@@ -835,7 +835,7 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
     
     pRange <- .createRangeString(start, end)
     
-    load(file = paste0(fileName, pRange, "_resAnno.Rda"))
+    load(file = .filePath(prefixPath, fileName, pRange, "_resAnno.Rda"))
     
     mergedIBDsegmentList <- resHapRFN$mergedIBDsegmentList
     
@@ -889,7 +889,7 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
        avIBDsegmentPosS, avIBDsegmentLengthSNVS, avIBDsegmentLengthS, 
        avnoIndividS, avnoTagSNVsS, avnoFreqS, avnoGroupFreqS, avnotagSNVChangeS,
        avnotagSNVsPerIndividualS, avnoindividualPerTagSNVS, 
-       file = paste0("analyzeResult", ".Rda"))
+       file = .filePath(prefixPath, "analyzeResult.Rda"))
   
   return(list(startRun = startRun, endRun = endRun, noIBDsegments = noIBDsegments,
               avIBDsegmentPos = avIBDsegmentPos, avIBDsegmentLengthSNV = avIBDsegmentLengthSNV,
@@ -910,14 +910,15 @@ function(fileName, startRun = 1, endRun = 0, shiftSize = 5000,
 # Read info file and return a list with nsamples and nsnps
 .readInfo <- 
 function(prefixPath, fileName, infoPostfix) {
-  setNames(as.list(as.numeric(readLines(file.path(prefixPath, paste0(fileName, infoPostfix)), n = 2,
-                                        warn = FALSE))), c("nsamples", "nsnps"))
+  setNames(as.list(as.numeric(readLines(.filePath(prefixPath, fileName, 
+                                                  infoPostfix),
+                              n = 2, warn = FALSE))), c("nsamples", "nsnps"))
 }
 
 # Read individuals file
 .readIndividuals <- 
 function(prefixPath, fileName, individualsPostfix) {
-  read.table(file.path(prefixPath, paste0(fileName, individualsPostfix)), 
+  read.table(.filePath(prefixPath, fileName, individualsPostfix), 
       header = FALSE, sep = " ", quote = "", as.is = TRUE)
 }
 
@@ -1021,4 +1022,10 @@ function(startRun, endRun, snvs, intervalSize, shiftSize) {
   }
 
   list(startRun = startRun, endRun = endRun)
+}
+
+# Returns a path to the file with extensions
+.filePath <-
+function(prefixPath, fileName, ...) {
+  file.path(prefixPath, paste0(fileName, ...))
 }

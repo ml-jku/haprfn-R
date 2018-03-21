@@ -6,7 +6,7 @@
 \usage{
 iterateIntervals(startRun = 1, endRun = 0, shiftSize = 5000,
   intervalSize = 10000, annotationFile = NULL, fileName, prefixPath = "",
-  outputPath = NULL, sparseMatrixPostfix = "_mat.txt",
+  outputPath = getwd(), sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
   infoPostfix = "_info.txt", samples = 0, l1 = 0, lowerBP = 0,
   upperBP = 0.05, p = 50, cyc = 100, etaW = 0.1, etaP = 0.1,
@@ -38,8 +38,8 @@ Default value = 10000.}
 
 \item{prefixPath}{The path to the input file. Default is the current directory.}
 
-\item{outputPath}{The path for the output files. Default = NULL, which uses
-the current directory.}
+\item{outputPath}{The path for the output files. Default = the current
+directory.}
 
 \item{sparseMatrixPostfix}{The posftix for the input matrices.
 Default = "_mat.txt".}
