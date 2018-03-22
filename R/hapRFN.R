@@ -906,6 +906,58 @@ function(fileName, prefixPath = getwd(), startRun = 1, endRun = 0,
               avnoindividualPerTagSNVS = avnoindividualPerTagSNVS))
 }
 
+#' @title IBD segment plotter
+#'
+#' @param x an IBD segment
+#' @template param-plot
+#'
+#' @export
+#' @importFrom hapFabia plotIBDsegment
+plotIBDSegment <-
+function(x, fileName, interactive = interactive(), ...) {
+  if (missing(x)) {
+    stop("List of IBD segments 'x' is missing. Stopped.")
+  }
+  if (missing(fileName)) {
+    stop("File name 'filename' for loading genotypes is missing. Stopped.")
+  }
+  individ <- x@individuals
+  tagSNV <- x@tagSNVs
+  tagSNV <- as.integer(sort.int(as.integer(unique(tagSNV))))
+  tagSNVPositions <- x@tagSNVPositions
+  chrom <- x@chromosome
+  
+  labels_ALL <- x@labelIndividuals
+  Lout <- readSparseSamples(X = fileName, samples = individ,
+                            lowerB = 0, upperB = 1000.0)
+  
+  plotIBDsegment(Lout = Lout, tagSNV = list(tagSNV),
+    physPos = tagSNVPositions, colRamp = 12, val = c(0.0,2.0,1.0),
+    chrom = chrom, count = i, labelsNA = labels_ALL, ...) 
+}
+
+#' @title IBD segment list plotter
+#'
+#' @param x an IBDsegmentList
+#' @template param-plot
+#'
+#' @export
+plotIBDSegmentList <-
+function(x, fileName, interactive = interactive(), ...) {
+  if (missing(x)) {
+    stop("List of IBD segments 'x' is missing. Stopped.")
+  }
+  if (missing(fileName)) {
+    stop("File name 'filename' for loading genotypes is missing. Stopped.")
+  }
+  askNewPageOriginal <- devAskNewPage()
+  devAskNewPage(ask = interactive)
+  for (i in 1:x@lengthList) {
+    plotIBDSegment(x[[i]], fileName, interactive, ...)
+  }
+  devAskNewPage(ask = askNewPageOriginal)
+}
+
 #' @importFrom stats setNames
 # Read info file and return a list with nsamples and nsnps
 .readInfo <- 
