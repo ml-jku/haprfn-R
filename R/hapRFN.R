@@ -914,7 +914,7 @@ function(fileName, prefixPath = getwd(), startRun = 1, endRun = 0,
 #' @export
 #' @importFrom hapFabia plotIBDsegment
 plotIBDSegment <-
-function(x, fileName, interactive = interactive(), ...) {
+function(x, fileName, interactive = interactive(), count = 0, ...) {
   if (missing(x)) {
     stop("List of IBD segments 'x' is missing. Stopped.")
   }
@@ -933,7 +933,7 @@ function(x, fileName, interactive = interactive(), ...) {
   
   plotIBDsegment(Lout = Lout, tagSNV = list(tagSNV),
     physPos = tagSNVPositions, colRamp = 12, val = c(0.0,2.0,1.0),
-    chrom = chrom, count = i, labelsNA = labels_ALL, ...) 
+    chrom = chrom, count = count, labelsNA = labels_ALL, ...) 
 }
 
 #' @title IBD segment list plotter
@@ -953,7 +953,7 @@ function(x, fileName, interactive = interactive(), ...) {
   askNewPageOriginal <- devAskNewPage()
   devAskNewPage(ask = interactive)
   for (i in 1:x@lengthList) {
-    plotIBDSegment(x[[i]], fileName, interactive, ...)
+    plotIBDSegment(x[[i]], fileName, interactive, i, ...)
   }
   devAskNewPage(ask = askNewPageOriginal)
 }
