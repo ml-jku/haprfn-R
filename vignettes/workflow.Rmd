@@ -30,26 +30,25 @@ The function converts a .vcf file to a sparse matrix format. The vcf file can be
 ```r
 library(hapRFN)
 
-# This is the name of the vcf file without the extension
-filename <- "chromosome1"
+# The name of the VCF file without the extension (.vcf and .vcf.gz accepted)
+fileName <- "name_of_the_vcf_file"
 
 # This is the path to the vcf file
-path <- "/home/users/research/dataset/vcf"
+path <- "/the/path/to/the/vcf/file"
 
 # The name of the output file (defaults to the input filename,
 # but appends a different extension and it does not overwrite it)
-output <- "chromosome1_output_sparse"
+output <- "the_name_of_the_output_file"
 
-# The path to the output
-outputPath <- "/home/users/research/dataset/split"
+# The path to the output of vcf2sparse
+outputPath <- "/the/path/to/the/output/file"
 
 # These are the default values, that are used throughout the package
 intervalSize <- 10000
 shiftSize <- 5000
 
-vcf2sparse(filename, path, intervalSize, shiftSize, outputFile = output,
+vcf2sparse(fileName, path, intervalSize, shiftSize, outputFile = output,
            outputPrefixPath = outputPath)
-
 ```
 
 Calling this command will split the matrix in multiple intervals, in a sparse matrix format, and generate an annotation, info and individuals file. These files will be used in the subsequent calls.
@@ -67,6 +66,9 @@ biclusters <- 50
 
 annotationFile <- paste0(outputPath, "/", output, "_annot.txt")
 
+# Path to the analysis files
+analysisResults <- "/the/path/to/the/result/files"
+
 iterateIntervals(annotationFile = annotationFile, fileName = output,
   shiftSize = shiftSize, intervalSize = intervalSize,
   prefixPath = path, gpuId = gpuId, p = biclusters)
@@ -83,7 +85,8 @@ anaRes <- analyzeIBDsegments(fileName = fileName, shiftSize = shiftSize,
 ```r
 print("Number IBD segments:")
 print(anaRes$noIBDsegments)
-print("Statistics on IBD segment lengths in SNVs (all SNVs in the IBD segment):")
+print("Statistics on IBD segment lengths in SNVs (all SNVs in the
+IBD segment):")
 print(anaRes$avIBDsegmentLengthSNVS)
 print("Statistics on IBD segment lengths in bp:")
 print(anaRes$avIBDsegmentLengthS)
@@ -102,23 +105,41 @@ print(anaRes$avnotagSNVsPerIndividualS)
 print("Statistics on number of individuals that have the minor allele of tagSNVs:")
 print(anaRes$avnoindividualPerTagSNVS)
 
-# Load result for interval 50 #######
-posAll <- 50 # (50-1)*5000 = 245000: segment 245000 to 255000
+# Load result for interval 50
+posAll <- 50 # (50 - 1) * 5000 = 245000: segment 245000 to 255000
 start <- (posAll - 1) * shiftSize
 end <- start + intervalSize
-pRange <- paste0("_", format(start, scientific = FALSE), "_", format(end, scientific = FALSE))
-load(file = paste0(fileName, pRange, "_resAnno", ".Rda"))
+pRange <- paste0("_", format(start, scientific = FALSE), "_",
+  format(end, scientific = FALSE))
+load(file = file.path(analysisResults, paste0(output, pRange, "_resAnno", ".Rda")))
 IBDsegmentList <- resHapRFN$mergedIBDsegmentList
 
 summary(IBDsegmentList)
-# plot IBD segments in interval 50
-plot(IBDsegmentList, filename = paste0(fileName, pRange, "_mat"))
-   ##attention: filename without type ".txt"
+
+# Set this to true, to plot to a file
+plotToFile <- T
+
+if (plotToFile) {
+    pdf("IBD_segments_interval_50.pdf")
+}
+
+# Plot IBD segments in interval 50
+
+matFile <- file.path(outputPath, paste0(fileName, pRange, "_matG.txt"))
+plotIBDSegmentList(IBDsegmentList, fileName = matFile, interactive = !plotToFile)
 
 # Plot the first IBD segment in interval 50
 
 IBDsegment <- IBDsegmentList[[1]]
-plot(IBDsegment, filename = paste0(fileName, pRange, "_mat"))
-   ##attention: filename without type ".txt"
+
+if (plotToFile) {
+    pdf("IBD_segment_1_interval_50")
+}
+plotIBDSegment(IBDsegment, fileName = matFile, interactive = !plotToFile)
+
+if (plotToFile) {
+    dev.off()
+}
+
 ```
 
