@@ -128,7 +128,7 @@ function(X, samples = 0, lowerB = 0, upperB = 1000) {
 #'
 #' @export
 vcf2sparse <-
-function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
+function(fileName, prefixPath = ".", intervalSize = 10000, shiftSize = 5000,
          annotation = TRUE, genotypes = TRUE, haplotypes = FALSE,
          missingValues = 0, annotationPostfix = "_annot.txt",
          genotypesPostfix = "_matG.txt", haplotypesPostfix = "_matH.txt",
@@ -163,7 +163,7 @@ function(fileName, prefixPath = NULL, intervalSize = 10000, shiftSize = 5000,
 #' @export
 iterateIntervals <-
 function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000, 
-         annotationFile = NULL, fileName, prefixPath = "", outputPath = getwd(),
+         annotationFile = NULL, fileName, prefixPath = ".", outputPath = getwd(),
          sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          samples = 0, l1 = 0.0, lowerBP = 0, upperBP = 0.05, p = 50, cyc = 100,
@@ -255,7 +255,7 @@ function(startRun = 1, endRun = 0, shiftSize = 5000, intervalSize = 10000,
 #' @importFrom methods new
 #'
 hapRFN <-
-function(fileName, prefixPath = "", outputPath = getwd(),
+function(fileName, prefixPath = ".", outputPath = getwd(),
          sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
          individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
          labelsA = NULL, pRange = "", samples = 0, lowerBP = 0, upperBP = 0.05,
