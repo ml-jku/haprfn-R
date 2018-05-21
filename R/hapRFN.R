@@ -958,6 +958,69 @@ function(x, fileName, interactive = interactive(), ...) {
   devAskNewPage(ask = askNewPageOriginal)
 }
 
+#' TODO add docs
+#' @importFrom stats hclust
+#' @export
+compareIBDsegmentLists <-
+function(IBDsegmentList1, IBDsegmentList2 = NULL, simv = "minD",
+         pTagSNVs = NULL, pIndivid = NULL, minTagSNVs = 6, minIndivid = 2) {
+  if (missing(IBDsegmentList1)) {
+    stop("List of IBD segments 'IBDsegmentList1' is missing. Stopped.")
+  }
+
+  extractFun <- function(IBDsegmentList, with) {
+    sapply(IBDsegments(IBDsegmentList), function(x) { with(x) }, 
+           simplify = FALSE)
+  }
+
+  if (!is.null(IBDsegmentList2)) {
+    tagSNVs1 <- extractFun(IBDsegmentList1, tagSNVs)
+    tagSNVs2 <- extractFun(IBDsegmentList2, tagSNVs)
+    individ1 <- extractFun(IBDsegmentList1, individuals)
+    individ2 <- extractFun(IBDsegmentList2, individuals)
+
+    tagSNVs <- c(tagSNVs1,tagSNVs2)
+    individ <- c(individ1,individ2)
+  } else {
+    tagSNVs <- extractFun(IBDsegmentList1, tagSNVs)
+    individ <- extractFun(IBDsegmentList1, individuals)
+  }
+
+  l <- length(tagSNVs)
+
+  if (l > 1) {
+    combn2sym <- function(intList, FUN) {
+      res <- combn(intList, 2, function(pair) { FUN(pair[[1]], pair[[2]]) })
+      diagonal <- sapply(intList, function(x) { FUN(x, x) })
+
+      l <- length(intList)
+      mat <- matrix(, l, l)
+      mat[upper.tri(mat)] <- res
+      mat[lower.tri(mat)] <- res
+      diag(mat) <- diagonal
+    }
+    measure <- function(x, y) { sim(x, y, simv, minInter = minTagSNVs) }
+    
+    tagSNVsSim <- combn2sym(tagSNVs, measure)
+    if (!is.null(pTagSNVs)) {
+      tagSNVsSim <- tagSNVsSim^pTagSNVs
+    }
+
+    individSim <- combn2sym(individ, measure)
+    if (!is.null(pIndivid)) {
+      individSim <- individSim^pIndivid
+    }
+    oneM <- matrix(1,nrow=l,ncol=l)
+
+    dist <- as.dist(oneM - tagSNVsSim*individSim)
+    clust <- hclust(dist)
+  } else {
+    clust <- NULL
+  }
+
+  return(clust)  
+}
+
 #' @importFrom stats setNames
 # Read info file and return a list with nsamples and nsnps
 .readInfo <- 
