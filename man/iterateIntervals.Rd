@@ -5,7 +5,7 @@
 \title{Iterate intervals.}
 \usage{
 iterateIntervals(startRun = 1, endRun = 0, shiftSize = 5000,
-  intervalSize = 10000, annotationFile = NULL, fileName, prefixPath = "",
+  intervalSize = 10000, annotationFile = NULL, fileName, prefixPath = ".",
   outputPath = getwd(), sparseMatrixPostfix = "_mat.txt",
   annotationPostfix = "_annot.txt", individualsPostfix = "_individuals.txt",
   infoPostfix = "_info.txt", samples = 0, l1 = 0, lowerBP = 0,

@@ -4,7 +4,7 @@
 \alias{hapRFN}
 \title{Identifying IBD segments.}
 \usage{
-hapRFN(fileName, prefixPath = "", outputPath = getwd(),
+hapRFN(fileName, prefixPath = ".", outputPath = getwd(),
   sparseMatrixPostfix = "_mat.txt", annotationPostfix = "_annot.txt",
   individualsPostfix = "_individuals.txt", infoPostfix = "_info.txt",
   labelsA = NULL, pRange = "", samples = 0, lowerBP = 0,

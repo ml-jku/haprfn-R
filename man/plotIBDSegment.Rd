@@ -4,7 +4,7 @@
 \alias{plotIBDSegment}
 \title{IBD segment plotter}
 \usage{
-plotIBDSegment(x, fileName, interactive = interactive(), ...)
+plotIBDSegment(x, fileName, interactive = interactive(), count = 0, ...)
 }
 \arguments{
 \item{x}{an IBD segment}

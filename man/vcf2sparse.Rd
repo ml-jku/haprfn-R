@@ -4,7 +4,7 @@
 \alias{vcf2sparse}
 \title{Transforming VCF files.}
 \usage{
-vcf2sparse(fileName, prefixPath = NULL, intervalSize = 10000,
+vcf2sparse(fileName, prefixPath = ".", intervalSize = 10000,
   shiftSize = 5000, annotation = TRUE, genotypes = TRUE,
   haplotypes = FALSE, missingValues = 0, annotationPostfix = "_annot.txt",
   genotypesPostfix = "_matG.txt", haplotypesPostfix = "_matH.txt",
