@@ -6,3 +6,5 @@ void vcf2sparse(SEXP file_nameS, SEXP prefix_pathS, SEXP interval_sizeS, SEXP sh
 SEXP samplesPerFeature(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS);
 
 SEXP readSparseSamples(SEXP file_nameS, SEXP samplesS, SEXP lowerBS, SEXP upperBS);
+
+SEXP similarityMeasure(SEXP x, SEXP y, SEXP simv, SEXP minInter);

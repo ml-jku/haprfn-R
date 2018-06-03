@@ -989,24 +989,20 @@ function(IBDsegmentList1, IBDsegmentList2 = NULL, simv = "minD",
   l <- length(tagSNVs)
 
   if (l > 1) {
-    combn2sym <- function(intList, FUN) {
-      res <- combn(intList, 2, function(pair) { FUN(pair[[1]], pair[[2]]) })
-      diagonal <- sapply(intList, function(x) { FUN(x, x) })
+    simvI <- 2
+    simvI <- switch(simv,
+      jaccard = 0,
+      dice = 1,
+      minD = 2,
+      maxD = 3)
+    tagSNVsSim <- sapply(tagSNVs,function(x) { sapply(tagSNVs, function(y) {.sim_internal(x,y,simvI,minInter=minTagSNVs)})} )
 
-      l <- length(intList)
-      mat <- matrix(, l, l)
-      mat[upper.tri(mat)] <- res
-      mat[lower.tri(mat)] <- res
-      diag(mat) <- diagonal
-    }
-    measure <- function(x, y) { sim(x, y, simv, minInter = minTagSNVs) }
-    
-    tagSNVsSim <- combn2sym(tagSNVs, measure)
     if (!is.null(pTagSNVs)) {
       tagSNVsSim <- tagSNVsSim^pTagSNVs
     }
 
-    individSim <- combn2sym(individ, measure)
+    individSim <- sapply(individ,function(x) { sapply(individ, function(y) {.sim_internal(x,y,simvI,minInter=minIndivid)})} )
+
     if (!is.null(pIndivid)) {
       individSim <- individSim^pIndivid
     }
@@ -1019,6 +1015,12 @@ function(IBDsegmentList1, IBDsegmentList2 = NULL, simv = "minD",
   }
 
   return(clust)  
+}
+
+#' vectorized sim function
+.sim_internal <- 
+function(x, y, simv = 2, minInter = 2) {
+  .Call("similarityMeasure", x, y, as.integer(simv), as.integer(minInter))
 }
 
 #' @importFrom stats setNames
